@@ -167,6 +167,17 @@ abstract class State
     }
 
     /**
+     * Determine if the current state is the given state.
+     *
+     * @param  string $state
+     * @return bool
+     */
+    public function is($state)
+    {
+        return $this->current() == $state;
+    }
+
+    /**
      * Format to string.
      *
      * @return string

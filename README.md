@@ -41,7 +41,7 @@ class BookingState extends State
 2. Create the transitions class:
 
 ```php
-class BookingTransitions extends State
+class BookingStateTransitions extends State
 {
     const PAYMENT_PAID = 'payment_paid';
     const PAYMENT_FAILED = 'payment_failed';
@@ -81,4 +81,16 @@ class Booking extends Model implements Stateful
         'state' => BookingState::class,
     ];
 }
+```
+
+## Usage
+
+You can now get the current state like this:
+
+```php
+$booking->state->current(); // "pending"
+(string) $booking->state; // "pending"
+$booking->state->is(BookingState::PENDING); // true
+$booking->state->can(BookingStateTransition::PAYMENT_PAID); // true
+$booking->state->transition(BookingStateTransition::PAYMENT_PAID); // changes state from "pending to "successful"
 ```
