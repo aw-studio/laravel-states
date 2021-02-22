@@ -19,6 +19,8 @@ class ModelIntegrationTest extends TestCase
     {
         parent::setUp();
 
+        $this->loadMigrationsFrom(__DIR__.'/../migrations');
+
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
         });
