@@ -1,0 +1,44 @@
+{
+	"name": "aw-studio/laravel-states",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "cbl",
+			"email": "lennart.carbe@gmail.com"
+		}
+	],
+	"scripts": {
+		"test": "vendor/bin/phpunit"
+	},
+	"autoload": {
+		"psr-4": {
+			"AwStudio\\States\\": "src"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Tests\\": "tests/"
+		}
+	},
+	"require": {
+		"illuminate/database": "^8.28",
+		"illuminate/support": "^8.28"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^9.4",
+		"mockery/mockery": "^1.4",
+		"orchestra/testbench": "^6.13"
+	},
+	"extra": {
+		"laravel": {
+			"providers": [
+				"AwStudio\\States\\StatesServiceProvider"
+			]
+		},
+		"branch-alias": {
+			"dev-master": "1.x-dev"
+		}
+	},
+	"minimum-stability": "dev",
+	"prefer-stable": true
+}
