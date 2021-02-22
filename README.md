@@ -85,7 +85,7 @@ class Booking extends Model implements Stateful
 
 ## Usage
 
-You can now get the current state like this:
+You can now get the state like this:
 
 ```php
 $booking->state->current(); // "pending"
