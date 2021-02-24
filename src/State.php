@@ -173,13 +173,18 @@ abstract class State
      * Execute transition.
      *
      * @param  string $transition
+     * @param  string $fail
      * @return void
      *
      * @throws TransitionException
      */
-    public function transition($transition)
+    public function transition($transition, $fail = true)
     {
         if (! $this->can($transition)) {
+            if (! $fail) {
+                return;
+            }
+
             throw new TransitionException(
                 "Transition [{$transition}] to change [{$this->type}] not allowed for [".$this->current().']'
             );
