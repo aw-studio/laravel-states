@@ -4,7 +4,7 @@ namespace AwStudio\States;
 
 use Illuminate\Support\ServiceProvider;
 
-class StateServiceProvider extends ServiceProvider
+class StatesServiceProvider extends ServiceProvider
 {
     /**
      * Boot application services.
