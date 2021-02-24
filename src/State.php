@@ -5,6 +5,7 @@ namespace AwStudio\States;
 use AwStudio\States\Contracts\Stateful;
 use AwStudio\States\Exceptions\TransitionException;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use ReflectionClass;
 
@@ -181,6 +182,12 @@ abstract class State
     public function transition($transition, $fail = true)
     {
         if (! $this->can($transition)) {
+            Log::warning('Unallowed transition.', [
+                'transition' => $transition,
+                'type'       => $this->type,
+                'current'    => $this->current(),
+            ]);
+
             if (! $fail) {
                 return;
             }

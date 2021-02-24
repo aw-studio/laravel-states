@@ -12,16 +12,16 @@ trait HasStates
      *
      * @return void
      */
-    public function initializeHasStates()
-    {
-        foreach ($this->casts as $attribute => $cast) {
-            if (! is_subclass_of($cast, State::class)) {
-                continue;
-            }
+    // public function initializeHasStates()
+    // {
+    //     foreach ($this->casts as $attribute => $cast) {
+    //         if (! is_subclass_of($cast, State::class)) {
+    //             continue;
+    //         }
 
-            $this->setAttribute($attribute, $cast::INITIAL_STATE);
-        }
-    }
+    //         // $this->setAttribute($attribute, $cast::INITIAL_STATE);
+    //     }
+    // }
 
     /**
      * Get states.
