@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use AwStudio\States\StateServiceProvider;
+use AwStudio\States\StatesServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
@@ -25,6 +25,6 @@ class TestCase extends \Orchestra\Testbench\TestCase
 
     protected function getPackageProviders($app)
     {
-        return [StateServiceProvider::class];
+        return [StatesServiceProvider::class];
     }
 }

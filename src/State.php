@@ -4,7 +4,9 @@ namespace AwStudio\States;
 
 use AwStudio\States\Contracts\Stateful;
 use AwStudio\States\Exceptions\TransitionException;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use ReflectionClass;
 
 abstract class State
 {
@@ -18,7 +20,7 @@ abstract class State
     /**
      * Stateful instance.
      *
-     * @var Stateful
+     * @var Stateful|Model
      */
     protected $stateful;
 
@@ -37,6 +39,41 @@ abstract class State
     abstract public static function config();
 
     /**
+     * Returns an array of all types.
+     *
+     * @return array
+     */
+    public static function all()
+    {
+        $reflector = new ReflectionClass(static::class);
+
+        return collect($reflector->getConstants())
+            ->filter(fn ($value, $key) => ! in_array($key, [
+                'INITIAL_STATE', 'FINAL_STATES',
+            ]))
+            ->values()
+            ->toArray();
+    }
+
+    /**
+     * Returns an array fo all transitions.
+     *
+     * @return array
+     */
+    public static function uniqueTransitions()
+    {
+        $transitions = [];
+
+        foreach (static::getTransitions() as $transition) {
+            if (! in_array($transition->name, $transitions)) {
+                $transitions[] = $transition->name;
+            }
+        }
+
+        return $transitions;
+    }
+
+    /**
      * Allow transition.
      *
      * @param  string     $transition
@@ -44,9 +81,13 @@ abstract class State
      */
     public static function set($transition)
     {
+        if (! array_key_exists(static::class, static::$transitions)) {
+            static::$transitions[static::class] = [];
+        }
+
         $transition = new Transition($transition);
 
-        static::$transitions[] = $transition;
+        static::$transitions[static::class][] = $transition;
 
         return $transition;
     }
@@ -58,11 +99,11 @@ abstract class State
      */
     public static function getTransitions()
     {
-        if (empty(static::$transitions)) {
+        if (! array_key_exists(static::class, static::$transitions)) {
             static::config();
         }
 
-        return static::$transitions;
+        return static::$transitions[static::class];
     }
 
     /**
@@ -146,10 +187,18 @@ abstract class State
 
         $transition = $this->getCurrentTransition($transition);
 
+        $this->stateful->fireStateEvent($this->stateful->getTransitionEventName(
+            $this->getType(), $transition->name
+        ));
+
         $state = $this->stateful->states()->makeFromTransition(
             $this->getType(), $transition
         );
         $state->save();
+
+        $this->stateful->fireStateEvent($this->stateful->getStateEventName(
+            $this->getType(), $transition->to
+        ));
 
         return $state;
     }

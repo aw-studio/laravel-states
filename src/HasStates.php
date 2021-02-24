@@ -3,6 +3,7 @@
 namespace AwStudio\States;
 
 use AwStudio\States\Models\State;
+use Illuminate\Support\Str;
 
 trait HasStates
 {
@@ -116,5 +117,76 @@ trait HasStates
         }
 
         return parent::getAttribute($key);
+    }
+
+    /**
+     * Get the observable event names.
+     *
+     * @return array
+     */
+    public function getObservableEvents()
+    {
+        return array_merge(
+            $this->getObservableStateEvents(),
+            parent::getObservableEvents()
+        );
+    }
+
+    /**
+     * Get observable state events.
+     *
+     * @return array
+     */
+    public function getObservableStateEvents()
+    {
+        $events = [];
+
+        foreach ($this->getStateTypes() as $name => $type) {
+            foreach ($type::all() as $state) {
+                $events[] = $this->getStateEventName($name, $state);
+            }
+            foreach ($type::uniqueTransitions() as $transition) {
+                $events[] = $this->getTransitionEventName($name, $transition);
+            }
+        }
+
+        return $events;
+    }
+
+    /**
+     * Get state event name.
+     *
+     * @param  string $type
+     * @param  string $state
+     * @return string
+     */
+    public function getStateEventName($type, $state)
+    {
+        return Str::camel("{$type}_{$state}");
+    }
+
+    /**
+     * Get transition event name.
+     *
+     * @param  string $type
+     * @param  string $transition
+     * @return string
+     */
+    public function getTransitionEventName($type, $transition)
+    {
+        return Str::camel("{$type}_transision_{$transition}");
+    }
+
+    /**
+     * Fire state event.
+     *
+     * @param  string $event
+     * @return void
+     */
+    public function fireStateEvent($event)
+    {
+        $this->fireModelEvent(
+            $event, false
+        );
     }
 }

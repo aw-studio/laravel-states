@@ -69,6 +69,19 @@ class ModelIntegrationTest extends TestCase
         $this->assertInstanceOf(State::class, $booking->state);
         $this->assertSame(BookingState::SUCCESSFULL, (string) $booking->state);
     }
+
+    /** @test */
+    public function test_getObservableStateEvents_method()
+    {
+        $booking = Booking::create();
+        $this->assertEquals([
+            'statePending',
+            'stateFailed',
+            'stateSuccessfull',
+            'stateTransisionPaymentPaid',
+            'stateTransisionPaymentFailed',
+        ], $booking->getObservableStateEvents());
+    }
 }
 
 class BookingStateTransition
