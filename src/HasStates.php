@@ -3,26 +3,11 @@
 namespace AwStudio\States;
 
 use AwStudio\States\Models\State;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 trait HasStates
 {
-    /**
-     * Initialize has states.
-     *
-     * @return void
-     */
-    // public function initializeHasStates()
-    // {
-    //     foreach ($this->casts as $attribute => $cast) {
-    //         if (! is_subclass_of($cast, State::class)) {
-    //             continue;
-    //         }
-
-    //         // $this->setAttribute($attribute, $cast::INITIAL_STATE);
-    //     }
-    // }
-
     /**
      * Get states.
      *
@@ -42,6 +27,17 @@ trait HasStates
     public function getStateType($type)
     {
         return $this->getStateTypes()[$type] ?? null;
+    }
+
+    /**
+     * Determine wether a state exists.
+     *
+     * @param  string $type
+     * @return bool
+     */
+    public function hasState($type)
+    {
+        return array_key_exists($type, $this->states);
     }
 
     /**
@@ -94,7 +90,7 @@ trait HasStates
     {
         $latest = $this->states()
             ->where('type', $type)
-            ->latest()
+            ->orderByDesc('id')
             ->first();
 
         if (! $latest) {
@@ -105,18 +101,53 @@ trait HasStates
     }
 
     /**
-     * Get attribute.
+     * Determine if a get mutator exists for an attribute.
      *
      * @param  string $key
-     * @return mixed
+     * @return bool
      */
-    public function getAttribute($key)
+    public function hasGetMutator($key)
     {
-        if ($type = $this->getStateType($key)) {
-            return new $type($this, $key);
+        if ($this->hasState($key)) {
+            return true;
         }
 
-        return parent::getAttribute($key);
+        return parent::hasGetMutator($key);
+    }
+
+    /**
+     * Get the value of an attribute using its mutator.
+     *
+     * @param  string $key
+     * @param  mixed  $value
+     * @return mixed
+     */
+    public function mutateAttribute($key, $value)
+    {
+        if ($this->hasState($key)) {
+            return $this->mutatStateAttribute($key);
+        }
+
+        return parent::mutateAttribute($key, $value);
+    }
+
+    /**
+     * Mutate state attribute.
+     *
+     * @param  string $key
+     * @return State
+     */
+    public function mutatStateAttribute($key)
+    {
+        $type = $this->getStateType($key);
+
+        $state = new $type($this, $key);
+
+        if (parent::hasGetMutator($key)) {
+            $state = parent::mutateAttribute($key, $state);
+        }
+
+        return $this->attributes[$key] = $state;
     }
 
     /**
@@ -189,4 +220,93 @@ trait HasStates
             $event, false
         );
     }
+
+    /**
+     * `whereState`.
+     *
+     * @param  Builder $query
+     * @param  string  $type
+     * @param  string  $value
+     * @return void
+     */
+    public function scopeWhereState($query, $type, $value)
+    {
+        if ($this->getStateType($type)::INITIAL_STATE) {
+            return $query->whereDoesntHave('states');
+        }
+
+        $query->whereExists(function ($existsQuery) use ($type, $value) {
+            $existsQuery
+                ->from((new State)->getTable())
+                ->addSelect(["latest_{$type}" => State::select('state')
+                ->where('type', 'payment_state')
+                ->where('stateful_type', static::class)
+                ->whereColumn('stateful_id', 'subscriptions.id')
+                ->orderByDesc('id')
+                ->take(1),
+                ])
+                ->having("latest_{$type}", $value);
+        });
+    }
+
+    // /**
+    //  * Apply the given named scope if possible.
+    //  *
+    //  * @param  string $scope
+    //  * @param  array  $parameters
+    //  * @return mixed
+    //  */
+    // public function callNamedScope($scope, array $parameters = [])
+    // {
+    //     if ($this->hasStateScope($scope)) {
+    //         return $this->callNamedStateScope($scope, $parameters);
+    //     }
+
+    //     return $this->{'scope'.ucfirst($scope)}(...$parameters);
+    // }
+
+    // public function callNamedStateScope($scope, array $parameters = [])
+    // {
+    //     [$type, $state] = $this->getTypeAndStateFromScope($scope);
+
+    //     $builder = array_shift($parameters);
+    //     $builder->where($type, $state);
+    // }
+
+    // /**
+    //  * Determine if the model has a given scope.
+    //  *
+    //  * @param  string $scope
+    //  * @return bool
+    //  */
+    // public function hasNamedScope($scope)
+    // {
+    //     if ($this->hasStateScope($scope)) {
+    //         return true;
+    //     }
+
+    //     return parent::hasNamesScope($scope);
+    // }
+
+    // public function getTypeAndStateFromScope($scope)
+    // {
+    //     foreach ($this->states as $state => $type) {
+    //         foreach ($type::all() as $value) {
+    //             $method = 'where'.ucfirst(Str::camel($state)).ucfirst(Str::camel($value));
+
+    //             if ($method == $scope) {
+    //                 return [$state, $value];
+    //             }
+    //         }
+    //     }
+
+    //     return [null, null];
+    // }
+
+    // public function hasStateScope($scope)
+    // {
+    //     [$type, $state] = $this->getTypeAndStateFromScope($scope);
+
+    //     return (bool) $type;
+    // }
 }

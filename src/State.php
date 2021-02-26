@@ -4,12 +4,13 @@ namespace AwStudio\States;
 
 use AwStudio\States\Contracts\Stateful;
 use AwStudio\States\Exceptions\TransitionException;
+use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use ReflectionClass;
 
-abstract class State
+abstract class State implements Jsonable
 {
     /**
      * Possible transitions.
@@ -246,5 +247,16 @@ abstract class State
     public function __toString()
     {
         return $this->current();
+    }
+
+    /**
+     * Convert the object to its JSON representation.
+     *
+     * @param  int    $options
+     * @return string
+     */
+    public function toJson($options = 0)
+    {
+        return json_encode($this->current(), $options);
     }
 }
