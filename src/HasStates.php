@@ -147,7 +147,7 @@ trait HasStates
             $state = parent::mutateAttribute($key, $state);
         }
 
-        return $this->attributes[$key] = $state;
+        return $state;
     }
 
     /**
