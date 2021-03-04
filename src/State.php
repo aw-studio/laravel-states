@@ -172,6 +172,23 @@ abstract class State implements Jsonable
     }
 
     /**
+     * Determines wether a transition exists.
+     *
+     * @param  string $transition
+     * @return bool
+     */
+    public function transitionExists($transition)
+    {
+        foreach ($this->getTransitions() as $t) {
+            if ($t->name == $transition) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Execute transition.
      *
      * @param  string $transition
@@ -183,11 +200,13 @@ abstract class State implements Jsonable
     public function transition($transition, $fail = true)
     {
         if (! $this->can($transition)) {
-            Log::warning('Unallowed transition.', [
-                'transition' => $transition,
-                'type'       => $this->type,
-                'current'    => $this->current(),
-            ]);
+            if ($this->transitionExists($transition)) {
+                Log::warning('Unallowed transition.', [
+                    'transition' => $transition,
+                    'type'       => $this->type,
+                    'current'    => $this->current(),
+                ]);
+            }
 
             if (! $fail) {
                 return;
@@ -200,15 +219,14 @@ abstract class State implements Jsonable
 
         $transition = $this->getCurrentTransition($transition);
 
-        $this->stateful->fireStateEvent($this->stateful->getTransitionEventName(
-            $this->getType(), $transition->name
-        ));
-
         $state = $this->stateful->states()->makeFromTransition(
             $this->getType(), $transition
         );
         $state->save();
 
+        $this->stateful->fireStateEvent($this->stateful->getTransitionEventName(
+            $this->getType(), $transition->name
+        ));
         $this->stateful->fireStateEvent($this->stateful->getStateEventName(
             $this->getType(), $transition->to
         ));
