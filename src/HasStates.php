@@ -229,13 +229,41 @@ trait HasStates
      * @param  string  $value
      * @return void
      */
-    public function scopeWhereState($query, $type, $value)
+    public function scopeWhereStateIs($query, $type, $value)
     {
-        if ($this->getStateType($type)::INITIAL_STATE) {
+        if ($this->getStateType($type)::INITIAL_STATE == $value) {
             return $query->whereDoesntHave('states');
         }
 
         $query->whereExists(function ($existsQuery) use ($type, $value) {
+            $existsQuery
+                ->from((new State)->getTable())
+                ->addSelect(["latest_{$type}" => State::select('state')
+                ->where('type', 'payment_state')
+                ->where('stateful_type', static::class)
+                ->whereColumn('stateful_id', 'subscriptions.id')
+                ->orderByDesc('id')
+                ->take(1),
+                ])
+                ->having("latest_{$type}", $value);
+        });
+    }
+
+    /**
+     * `whereState`.
+     *
+     * @param  Builder $query
+     * @param  string  $type
+     * @param  string  $value
+     * @return void
+     */
+    public function scopeWhereStateIsNot($query, $type, $value)
+    {
+        if ($this->getStateType($type)::INITIAL_STATE == $value) {
+            return $query->whereDoesntHave('states');
+        }
+
+        $query->whereNotExists(function ($existsQuery) use ($type, $value) {
             $existsQuery
                 ->from((new State)->getTable())
                 ->addSelect(["latest_{$type}" => State::select('state')
