@@ -329,18 +329,18 @@ trait HasStates
     public function scopeWhereStateIsNot($query, $type, $value)
     {
         $query->where(function ($query) use ($type, $value) {
-            // $query->whereExists(function ($existsQuery) use ($type, $value) {
-            //     $existsQuery
-            //         ->from((new State)->getTable())
-            //         ->addSelect(["latest_{$type}" => State::select('state')
-            //         ->where('type', $type)
-            //         ->where('stateful_type', static::class)
-            //         ->whereColumn('stateful_id', 'subscriptions.id')
-            //         ->orderByDesc('id')
-            //         ->take(1),
-            //         ])
-            //         ->having("latest_{$type}", '!=', $value);
-            // });
+            $query->whereExists(function ($existsQuery) use ($type, $value) {
+                $existsQuery
+                    ->from((new State)->getTable())
+                    ->addSelect(["latest_{$type}" => State::select('state')
+                    ->where('type', $type)
+                    ->where('stateful_type', static::class)
+                    ->whereColumn('stateful_id', 'subscriptions.id')
+                    ->orderByDesc('id')
+                    ->take(1),
+                    ])
+                    ->having("latest_{$type}", '!=', $value);
+            });
 
             if ($this->getStateType($type)::INITIAL_STATE != $value) {
                 return $query->orWhereDoesntHaveStates($type);
