@@ -159,15 +159,23 @@ trait HasStates
 
         foreach ($this->getStateTypes() as $name => $type) {
             foreach ($type::all() as $state) {
+                $method = $this->getStateEventMethod($name, $state);
+                if (! method_exists($className, $method)) {
+                    continue;
+                }
                 static::registerModelEvent(
                     $this->getStateEventName($name, $state),
-                    $className.'@'.$this->getStateEventMethod($name, $state)
+                    $className.'@'.$method
                 );
             }
             foreach ($type::uniqueTransitions() as $transition) {
+                $method = $this->getTransitionEventMethod($name, $transition);
+                if (! method_exists($className, $method)) {
+                    continue;
+                }
                 static::registerModelEvent(
                     $this->getTransitionEventName($name, $transition),
-                    $className.'@'.$this->getTransitionEventMethod($name, $transition)
+                    $className.'@'.$method
                 );
             }
         }
@@ -186,6 +194,9 @@ trait HasStates
                 collect(explode('Or', str_replace(Str::camel($type), '', $methodName)))
                     ->map(fn ($event) => Str::snake($event))
                     ->each(function ($event) use ($type, $className, $methodName) {
+                        if (! method_exists($className, $methodName)) {
+                            return;
+                        }
                         static::registerModelEvent($this->getStateEventName($type, $event), $className.'@'.$methodName);
                     });
             }
