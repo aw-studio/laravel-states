@@ -254,6 +254,32 @@ trait HasStates
     }
 
     /**
+     * `whereDoesntHaveStates` scope.
+     *
+     * @param  string $type
+     * @return void
+     */
+    public function scopeWhereDoesntHaveStates($query, $type = 'state')
+    {
+        $query->whereDoesntHave('states', function ($statesQuery) use ($type) {
+            $statesQuery->where('type', $type);
+        });
+    }
+
+    /**
+     * `whereDoesntHaveStates` scope.
+     *
+     * @param  string $type
+     * @return void
+     */
+    public function scopeOrWhereDoesntHaveStates($query, $type = 'state')
+    {
+        $query->orWhereDoesntHave('states', function ($statesQuery) use ($type) {
+            $statesQuery->where('type', $type);
+        });
+    }
+
+    /**
      * `whereState`.
      *
      * @param  Builder $query
@@ -264,14 +290,14 @@ trait HasStates
     public function scopeWhereStateIs($query, $type, $value)
     {
         if ($this->getStateType($type)::INITIAL_STATE == $value) {
-            return $query->whereDoesntHave('states');
+            return $query->whereDoesntHaveStates($type);
         }
 
         $query->whereExists(function ($existsQuery) use ($type, $value) {
             $existsQuery
                 ->from((new State)->getTable())
                 ->addSelect(["latest_{$type}" => State::select('state')
-                ->where('type', 'payment_state')
+                ->where('type', $type)
                 ->where('stateful_type', static::class)
                 ->whereColumn('stateful_id', 'subscriptions.id')
                 ->orderByDesc('id')
@@ -291,21 +317,23 @@ trait HasStates
      */
     public function scopeWhereStateIsNot($query, $type, $value)
     {
-        if ($this->getStateType($type)::INITIAL_STATE == $value) {
-            return $query->whereDoesntHave('states');
-        }
+        $query->where(function ($query) use ($type, $value) {
+            $query->whereExists(function ($existsQuery) use ($type, $value) {
+                $existsQuery
+                    ->from((new State)->getTable())
+                    ->addSelect(["latest_{$type}" => State::select('state')
+                    ->where('type', $type)
+                    ->where('stateful_type', static::class)
+                    ->whereColumn('stateful_id', 'subscriptions.id')
+                    ->orderByDesc('id')
+                    ->take(1),
+                    ])
+                    ->having("latest_{$type}", '!=', $value);
+            });
 
-        $query->whereNotExists(function ($existsQuery) use ($type, $value) {
-            $existsQuery
-                ->from((new State)->getTable())
-                ->addSelect(["latest_{$type}" => State::select('state')
-                ->where('type', 'payment_state')
-                ->where('stateful_type', static::class)
-                ->whereColumn('stateful_id', 'subscriptions.id')
-                ->orderByDesc('id')
-                ->take(1),
-                ])
-                ->having("latest_{$type}", $value);
+            if ($this->getStateType($type)::INITIAL_STATE != $value) {
+                return $query->orWhereDoesntHaveStates($type);
+            }
         });
     }
 
