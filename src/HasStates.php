@@ -5,6 +5,7 @@ namespace AwStudio\States;
 use AwStudio\States\Models\State;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use ReflectionClass;
 
 trait HasStates
 {
@@ -150,38 +151,45 @@ trait HasStates
         return $state;
     }
 
-    /**
-     * Get the observable event names.
-     *
-     * @return array
-     */
-    public function getObservableEvents()
+    protected function registerObserver($class)
     {
-        return array_merge(
-            $this->getObservableStateEvents(),
-            parent::getObservableEvents()
-        );
-    }
-
-    /**
-     * Get observable state events.
-     *
-     * @return array
-     */
-    public function getObservableStateEvents()
-    {
-        $events = [];
+        parent::registerObserver($class);
+        $className = parent::resolveObserverClassName($class);
+        $reflector = new ReflectionClass($className);
 
         foreach ($this->getStateTypes() as $name => $type) {
             foreach ($type::all() as $state) {
-                $events[] = $this->getStateEventName($name, $state);
+                static::registerModelEvent(
+                    $this->getStateEventName($name, $state),
+                    $className.'@'.$this->getStateEventMethod($name, $state)
+                );
             }
             foreach ($type::uniqueTransitions() as $transition) {
-                $events[] = $this->getTransitionEventName($name, $transition);
+                static::registerModelEvent(
+                    $this->getTransitionEventName($name, $transition),
+                    $className.'@'.$this->getTransitionEventMethod($name, $transition)
+                );
             }
         }
 
-        return $events;
+        foreach ($reflector->getMethods() as $method) {
+            $methodName = $method->getName();
+            foreach ($this->states as $type => $state) {
+                if (! Str::startsWith($methodName, Str::camel($type))) {
+                    continue;
+                }
+
+                if (! str_contains($methodName, 'Or')) {
+                    continue;
+                }
+
+                collect(explode('Or', str_replace(Str::camel($type), '', $methodName)))
+                    ->map(fn ($event) => Str::snake($event))
+                    ->each(function ($event) use ($type, $className, $methodName) {
+                        static::registerModelEvent($this->getStateEventName($type, $event), $className.'@'.$methodName);
+                    });
+            }
+        }
     }
 
     /**
@@ -192,6 +200,18 @@ trait HasStates
      * @return string
      */
     public function getStateEventName($type, $state)
+    {
+        return "{$type}.{$state}";
+    }
+
+    /**
+     * Get state event name.
+     *
+     * @param  string $type
+     * @param  string $state
+     * @return string
+     */
+    public function getStateEventMethod($type, $state)
     {
         return Str::camel("{$type}_{$state}");
     }
@@ -205,20 +225,32 @@ trait HasStates
      */
     public function getTransitionEventName($type, $transition)
     {
-        return Str::camel("{$type}_transision_{$transition}");
+        return "{$type}.transition.{$transition}";
+    }
+
+    /**
+     * Get transition event name.
+     *
+     * @param  string $type
+     * @param  string $transition
+     * @return string
+     */
+    public function getTransitionEventMethod($type, $transition)
+    {
+        return Str::camel("{$type}_transition_{$transition}");
     }
 
     /**
      * Fire state event.
      *
-     * @param  string $event
+     * @param  string     $type
+     * @param  Transition $transition
      * @return void
      */
-    public function fireStateEvent($event)
+    public function fireStateEventsFor($type, Transition $transition)
     {
-        $this->fireModelEvent(
-            $event, false
-        );
+        $this->fireModelEvent($this->getTransitionEventName($type, $transition->name));
+        $this->fireModelEvent($this->getStateEventName($type, $transition->to));
     }
 
     /**
