@@ -79,13 +79,12 @@ class Booking extends Model implements Stateful
 
     protected $states = [
         'state' => BookingState::class,
+        'payment_state' => ...,
     ];
 }
 ```
 
 ## Usage
-
-You can now get the state like this:
 
 ```php
 $booking->state->current(); // "pending"
@@ -93,4 +92,16 @@ $booking->state->current(); // "pending"
 $booking->state->is(BookingState::PENDING); // true
 $booking->state->can(BookingStateTransition::PAYMENT_PAID); // true
 $booking->state->transition(BookingStateTransition::PAYMENT_PAID); // changes state from "pending to "successful"
+$booking->reloadState(); // reload the current state
+$booking->reloadState('payment_state');
+```
+
+## Query Methods
+
+```php
+$booking->withCurrentState(); // eager loading the current state
+$booking->whereStateIs('payment_state', PaymentState::PAID);
+$booking->orWhereStateIs('payment_state', PaymentState::PAID);
+$booking->whereStateIsNot('payment_state', PaymentState::PAID);
+$booking->orWhereStateIsNot('payment_state', PaymentState::PAID);
 ```

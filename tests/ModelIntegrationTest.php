@@ -113,6 +113,57 @@ class ModelIntegrationTest extends TestCase
         $this->assertSame('current_state', $booking->getCurrentStateRelationName('state'));
         $this->assertSame('current_payment_state', $booking->getCurrentStateRelationName('payment_state'));
     }
+
+    /** @test */
+    public function test_whereStateIs_query_scope()
+    {
+        $booking1 = Booking::create();
+        $booking2 = Booking::create();
+        $booking3 = Booking::create();
+        $booking1->state->transition(BookingStateTransition::PAYMENT_PAID);
+
+        $this->assertSame(2, Booking::whereStateIs('state', BookingState::INITIAL_STATE)->count());
+        $this->assertSame(0, Booking::whereStateIs('state', BookingState::FAILED)->count());
+        $this->assertSame(1, Booking::whereStateIs('state', BookingState::SUCCESSFULL)->count());
+        $this->assertSame($booking1->id, Booking::whereStateIs('state', BookingState::SUCCESSFULL)->first()->id);
+    }
+
+    /** @test */
+    public function test_OrWhereStateIs_query_scope()
+    {
+        $booking1 = Booking::create();
+        $booking2 = Booking::create();
+        $booking3 = Booking::create();
+        $booking1->state->transition(BookingStateTransition::PAYMENT_PAID);
+
+        $this->assertSame(2, Booking::where('id', $booking2->id)->OrWhereStateIs('state', BookingState::SUCCESSFULL)->count());
+    }
+
+    /** @test */
+    public function test_whereStateIsNot_query_scope()
+    {
+        $booking1 = Booking::create();
+        $booking2 = Booking::create();
+        $booking3 = Booking::create();
+        $booking1->state->transition(BookingStateTransition::PAYMENT_PAID);
+
+        $this->assertSame(3, Booking::whereStateIsNot('state', BookingState::FAILED)->count());
+        $this->assertSame(2, Booking::whereStateIsNot('state', BookingState::SUCCESSFULL)->count());
+        $this->assertSame(1, Booking::whereStateIsNot('state', BookingState::INITIAL_STATE)->count());
+        $this->assertSame($booking1->id, Booking::whereStateIsNot('state', BookingState::INITIAL_STATE)->first()->id);
+    }
+
+    /** @test */
+    public function test_orWhereStateIsNot_query_scope()
+    {
+        $booking1 = Booking::create();
+        $booking2 = Booking::create();
+        $booking3 = Booking::create();
+        $booking1->state->transition(BookingStateTransition::PAYMENT_PAID);
+
+        $this->assertSame(1, Booking::where('id', $booking1->id)->OrWhereStateIsNot('state', BookingState::INITIAL_STATE)->count());
+        $this->assertSame(2, Booking::where('id', $booking2->id)->OrWhereStateIsNot('state', BookingState::INITIAL_STATE)->count());
+    }
 }
 
 class BookingStateTransition

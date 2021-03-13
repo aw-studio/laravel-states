@@ -392,8 +392,30 @@ trait HasStates
         $query->whereExists(function ($existsQuery) use ($type, $value) {
             $existsQuery
                 ->from((new State)->getTable())
-                ->addCurrentStateSelect($type)
-                ->having("current_{$type}_state", $value);
+                ->where("current_{$type}_state", $value);
+            $this->scopeAddCurrentStateSelect($existsQuery, $type);
+        });
+    }
+
+    /**
+     * `orWhereStateIs` query scope.
+     *
+     * @param  Builder $query
+     * @param  string  $type
+     * @param  string  $value
+     * @return void
+     */
+    public function scopeOrWhereStateIs($query, $type, $value)
+    {
+        if ($this->getStateType($type)::INITIAL_STATE == $value) {
+            return $query->orWhereDoesntHaveStates($type);
+        }
+
+        $query->orWhereExists(function ($existsQuery) use ($type, $value) {
+            $existsQuery
+                ->from((new State)->getTable())
+                ->where("current_{$type}_state", $value);
+            $this->scopeAddCurrentStateSelect($existsQuery, $type);
         });
     }
 
@@ -411,8 +433,32 @@ trait HasStates
             $query->whereExists(function ($existsQuery) use ($type, $value) {
                 $existsQuery
                     ->from((new State)->getTable())
-                    ->addCurrentStateSelect($type)
-                    ->having("current_{$type}_state", '!=', $value);
+                    ->where("current_{$type}_state", '!=', $value);
+                $this->scopeAddCurrentStateSelect($existsQuery, $type);
+            });
+
+            if ($this->getStateType($type)::INITIAL_STATE != $value) {
+                return $query->orWhereDoesntHaveStates($type);
+            }
+        });
+    }
+
+    /**
+     * `orWhereStateIsNot` query scope.
+     *
+     * @param  Builder $query
+     * @param  string  $type
+     * @param  string  $value
+     * @return void
+     */
+    public function scopeOrWhereStateIsNot($query, $type, $value)
+    {
+        $query->orWhere(function ($query) use ($type, $value) {
+            $query->whereExists(function ($existsQuery) use ($type, $value) {
+                $existsQuery
+                    ->from((new State)->getTable())
+                    ->where("current_{$type}_state", '!=', $value);
+                $this->scopeAddCurrentStateSelect($existsQuery, $type);
             });
 
             if ($this->getStateType($type)::INITIAL_STATE != $value) {
