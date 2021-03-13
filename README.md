@@ -99,9 +99,9 @@ $booking->reloadState('payment_state');
 ## Query Methods
 
 ```php
-$booking->withCurrentState(); // eager loading the current state
-$booking->whereStateIs('payment_state', PaymentState::PAID);
-$booking->orWhereStateIs('payment_state', PaymentState::PAID);
-$booking->whereStateIsNot('payment_state', PaymentState::PAID);
-$booking->orWhereStateIsNot('payment_state', PaymentState::PAID);
+Booking::withCurrentState(); // eager loading the current state
+Booking::whereStateIs('payment_state', PaymentState::PAID);
+Booking::orWhereStateIs('payment_state', PaymentState::PAID);
+Booking::whereStateIsNot('payment_state', PaymentState::PAID);
+Booking::orWhereStateIsNot('payment_state', PaymentState::PAID);
 ```
