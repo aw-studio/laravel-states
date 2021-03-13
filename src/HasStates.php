@@ -4,11 +4,51 @@ namespace AwStudio\States;
 
 use AwStudio\States\Models\State;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use ReflectionClass;
 
 trait HasStates
 {
+    /**
+     * The array of initialized models.
+     *
+     * @var array
+     */
+    protected static $initialized = [];
+
+    /**
+     * Initialize HasStates trait.
+     *
+     * @return void
+     */
+    public function initializeHasStates()
+    {
+        if (! isset(static::$initialized[static::class])) {
+            static::$initialized[static::class] = true;
+
+            foreach ($this->states as $type => $state) {
+                static::resolveRelationUsing(
+                    $this->getCurrentStateRelationName($type),
+                    function (Model $stateful) use ($type) {
+                        return $this->belongsTo(State::class, "current_{$type}_id");
+                    }
+                );
+            }
+        }
+    }
+
+    /**
+     * Get current state relation name.
+     *
+     * @param  string $type
+     * @return string
+     */
+    public function getCurrentStateRelationName($type = 'state')
+    {
+        return "current_{$type}";
+    }
+
     /**
      * Get states.
      *
@@ -89,10 +129,15 @@ trait HasStates
      */
     public function getState($type = 'state')
     {
-        $latest = $this->states()
-            ->where('type', $type)
-            ->orderByDesc('id')
-            ->first();
+        $relation = $this->getCurrentStateRelationName($type);
+
+        $this->loadCurrentState();
+
+        if (! $this->relationLoaded($relation)) {
+            $this->loadCurrentState();
+        }
+
+        $latest = $this->getRelation($relation);
 
         if (! $latest) {
             return $this->getStateTypes()[$type]::INITIAL_STATE;
@@ -151,56 +196,96 @@ trait HasStates
         return $state;
     }
 
+    /**
+     * Register a single observer with the model.
+     *
+     * @param  object|string $class
+     * @return void
+     *
+     * @throws \RuntimeException
+     */
     protected function registerObserver($class)
     {
         parent::registerObserver($class);
         $className = parent::resolveObserverClassName($class);
         $reflector = new ReflectionClass($className);
 
-        foreach ($this->getStateTypes() as $name => $type) {
-            foreach ($type::all() as $state) {
-                $method = $this->getStateEventMethod($name, $state);
-                if (! method_exists($className, $method)) {
-                    continue;
-                }
-                static::registerModelEvent(
-                    $this->getStateEventName($name, $state),
-                    $className.'@'.$method
-                );
-            }
-            foreach ($type::uniqueTransitions() as $transition) {
-                $method = $this->getTransitionEventMethod($name, $transition);
-                if (! method_exists($className, $method)) {
-                    continue;
-                }
-                static::registerModelEvent(
-                    $this->getTransitionEventName($name, $transition),
-                    $className.'@'.$method
-                );
-            }
-        }
-
         foreach ($reflector->getMethods() as $method) {
-            $methodName = $method->getName();
-            foreach ($this->states as $type => $state) {
-                if (! Str::startsWith($methodName, Str::camel($type))) {
-                    continue;
-                }
+            foreach ($this->getStateTypes() as $type => $stateClass) {
+                foreach ($stateClass::all() as $state) {
+                    if (! $this->watchesObserverMethodState($method->getName(), $type, $state)) {
+                        continue;
+                    }
 
-                if (! str_contains($methodName, 'Or')) {
-                    continue;
+                    static::registerModelEvent(
+                        $this->getStateEventName($type, $state),
+                        $className.'@'.$method->getName()
+                    );
                 }
+                foreach ($stateClass::uniqueTransitions() as $transition) {
+                    if (! $this->watchesObserverMethodStateTransition($method->getName(), $type, $transition)) {
+                        continue;
+                    }
 
-                collect(explode('Or', str_replace(Str::camel($type), '', $methodName)))
-                    ->map(fn ($event) => Str::snake($event))
-                    ->each(function ($event) use ($type, $className, $methodName) {
-                        if (! method_exists($className, $methodName)) {
-                            return;
-                        }
-                        static::registerModelEvent($this->getStateEventName($type, $event), $className.'@'.$methodName);
-                    });
+                    static::registerModelEvent(
+                        $this->getTransitionEventName($type, $transition),
+                        $className.'@'.$method->getName()
+                    );
+                }
             }
         }
+    }
+
+    /**
+     * Determines wether an observer method watches the given state transition.
+     *
+     * @param  string $method
+     * @param  string $type
+     * @param  string $transition
+     * @return bool
+     */
+    protected function watchesObserverMethodStateTransition($method, $type, $transition)
+    {
+        if (! Str::startsWith($method, Str::camel($type))) {
+            return false;
+        }
+
+        $following = str_replace(Str::camel($type), '', $method);
+
+        return $following == ucfirst(Str::camel($transition));
+    }
+
+    /**
+     * Determines wether an observer method watches the given state.
+     *
+     * @param  string $method
+     * @param  string $type
+     * @param  string $state
+     * @return bool
+     */
+    protected function watchesObserverMethodState($method, $type, $state)
+    {
+        if (! Str::startsWith($method, Str::camel($type))) {
+            return false;
+        }
+
+        $following = str_replace(Str::camel($type), '', $method);
+
+        if ($following == ucfirst(Str::camel($state))) {
+            return true;
+        }
+
+        if (! str_contains($method, 'Or')) {
+            return false;
+        }
+
+        foreach (explode('Or', $following) as $key) {
+            if ($key == $state) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -252,7 +337,7 @@ trait HasStates
     }
 
     /**
-     * Fire state event.
+     * Fire state events for the given transition.
      *
      * @param  string     $type
      * @param  Transition $transition
@@ -265,7 +350,7 @@ trait HasStates
     }
 
     /**
-     * `whereDoesntHaveStates` scope.
+     * `whereDoesntHaveStates` query scope.
      *
      * @param  string $type
      * @return void
@@ -278,7 +363,7 @@ trait HasStates
     }
 
     /**
-     * `whereDoesntHaveStates` scope.
+     * `whereDoesntHaveStates` query scope.
      *
      * @param  string $type
      * @return void
@@ -291,7 +376,7 @@ trait HasStates
     }
 
     /**
-     * `whereState`.
+     * `whereStateIs` query scope.
      *
      * @param  Builder $query
      * @param  string  $type
@@ -307,19 +392,13 @@ trait HasStates
         $query->whereExists(function ($existsQuery) use ($type, $value) {
             $existsQuery
                 ->from((new State)->getTable())
-                ->addSelect(["latest_{$type}" => State::select('state')
-                ->where('type', $type)
-                ->where('stateful_type', static::class)
-                ->whereColumn('stateful_id', 'subscriptions.id')
-                ->orderByDesc('id')
-                ->take(1),
-                ])
-                ->having("latest_{$type}", $value);
+                ->addCurrentStateSelect($type)
+                ->having("current_{$type}_state", $value);
         });
     }
 
     /**
-     * `whereState`.
+     * `whereStateIsNot` query scope.
      *
      * @param  Builder $query
      * @param  string  $type
@@ -332,14 +411,8 @@ trait HasStates
             $query->whereExists(function ($existsQuery) use ($type, $value) {
                 $existsQuery
                     ->from((new State)->getTable())
-                    ->addSelect(["latest_{$type}" => State::select('state')
-                    ->where('type', $type)
-                    ->where('stateful_type', static::class)
-                    ->whereColumn('stateful_id', 'subscriptions.id')
-                    ->orderByDesc('id')
-                    ->take(1),
-                    ])
-                    ->having("latest_{$type}", '!=', $value);
+                    ->addCurrentStateSelect($type)
+                    ->having("current_{$type}_state", '!=', $value);
             });
 
             if ($this->getStateType($type)::INITIAL_STATE != $value) {
@@ -348,64 +421,67 @@ trait HasStates
         });
     }
 
-    // /**
-    //  * Apply the given named scope if possible.
-    //  *
-    //  * @param  string $scope
-    //  * @param  array  $parameters
-    //  * @return mixed
-    //  */
-    // public function callNamedScope($scope, array $parameters = [])
-    // {
-    //     if ($this->hasStateScope($scope)) {
-    //         return $this->callNamedStateScope($scope, $parameters);
-    //     }
+    /**
+     * `addCurrentStateSelect` query scope.
+     *
+     * @param  Builder $query
+     * @param  string  $type
+     * @param  string  $select
+     * @return void
+     */
+    public function scopeAddCurrentStateSelect($query, $type = 'state', $select = 'state')
+    {
+        $query->addSelect(["current_{$type}_{$select}" => State::select($select)
+            ->where('type', $type)
+            ->where('stateful_type', static::class)
+            ->whereColumn('stateful_id', $this->getTable().'.id')
+            ->orderByDesc('id')
+            ->take(1),
+        ]);
+    }
 
-    //     return $this->{'scope'.ucfirst($scope)}(...$parameters);
-    // }
+    /**
+     * `withCurrentState` query scope.
+     *
+     * @param  Builder $query
+     * @param  string  $type
+     * @return void
+     */
+    public function scopeWithCurrentState($query, $type = 'state')
+    {
+        $query->addCurrentStateSelect($type, 'id')->with($this->getCurrentStateRelationName($type));
+    }
 
-    // public function callNamedStateScope($scope, array $parameters = [])
-    // {
-    //     [$type, $state] = $this->getTypeAndStateFromScope($scope);
+    /**
+     * Load state relation of the given type.
+     *
+     * @param  string $type
+     * @return $this
+     */
+    public function loadCurrentState($type = 'state')
+    {
+        $currentState = $this->states()
+            ->where('type', $type)
+            ->orderByDesc('id')
+            ->first();
 
-    //     $builder = array_shift($parameters);
-    //     $builder->where($type, $state);
-    // }
+        $this->setRelation(
+            $this->getCurrentStateRelationName($type), $currentState
+        );
 
-    // /**
-    //  * Determine if the model has a given scope.
-    //  *
-    //  * @param  string $scope
-    //  * @return bool
-    //  */
-    // public function hasNamedScope($scope)
-    // {
-    //     if ($this->hasStateScope($scope)) {
-    //         return true;
-    //     }
+        return $this;
+    }
 
-    //     return parent::hasNamesScope($scope);
-    // }
+    /**
+     * Reload current state relation of the given type.
+     *
+     * @param  string $type
+     * @return $this
+     */
+    public function reloadState($type = 'state')
+    {
+        $this->loadCurrentState($type);
 
-    // public function getTypeAndStateFromScope($scope)
-    // {
-    //     foreach ($this->states as $state => $type) {
-    //         foreach ($type::all() as $value) {
-    //             $method = 'where'.ucfirst(Str::camel($state)).ucfirst(Str::camel($value));
-
-    //             if ($method == $scope) {
-    //                 return [$state, $value];
-    //             }
-    //         }
-    //     }
-
-    //     return [null, null];
-    // }
-
-    // public function hasStateScope($scope)
-    // {
-    //     [$type, $state] = $this->getTypeAndStateFromScope($scope);
-
-    //     return (bool) $type;
-    // }
+        return $this;
+    }
 }

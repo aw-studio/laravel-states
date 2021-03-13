@@ -71,16 +71,47 @@ class ModelIntegrationTest extends TestCase
     }
 
     /** @test */
-    public function test_getObservableStateEvents_method()
+    public function test_withCurrentState_method()
     {
         $booking = Booking::create();
-        $this->assertEquals([
-            'statePending',
-            'stateFailed',
-            'stateSuccessfull',
-            'stateTransisionPaymentPaid',
-            'stateTransisionPaymentFailed',
-        ], $booking->getObservableStateEvents());
+        $state = $booking->states()->create([
+            'type'       => 'state',
+            'state'      => 'foo',
+            'from'       => 'bar',
+            'transition' => 'bar_foo',
+        ]);
+
+        $booking = Booking::withCurrentState()->first();
+        $this->assertTrue($booking->relationLoaded('current_state'));
+        $this->assertSame($state->id, $booking->getRelation('current_state')->id);
+        $this->assertSame('foo', $booking->getRelation('current_state')->state);
+    }
+
+    /** @test */
+    public function test_loadCurrentState_method()
+    {
+        $booking = Booking::create();
+        $state = $booking->states()->create([
+            'type'       => 'state',
+            'state'      => 'foo',
+            'from'       => 'bar',
+            'transition' => 'bar_foo',
+        ]);
+
+        $this->assertFalse($booking->relationLoaded('current_state'));
+        $booking->loadCurrentState();
+        $this->assertTrue($booking->relationLoaded('current_state'));
+        $this->assertSame($state->id, $booking->getRelation('current_state')->id);
+        $this->assertSame('foo', $booking->getRelation('current_state')->state);
+    }
+
+    /** @test */
+    public function test_getCurrentStateRelationName_method()
+    {
+        $booking = new Booking;
+        $this->assertSame('current_state', $booking->getCurrentStateRelationName());
+        $this->assertSame('current_state', $booking->getCurrentStateRelationName('state'));
+        $this->assertSame('current_payment_state', $booking->getCurrentStateRelationName('payment_state'));
     }
 }
 

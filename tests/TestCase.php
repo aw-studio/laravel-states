@@ -3,8 +3,9 @@
 namespace Tests;
 
 use AwStudio\States\StatesServiceProvider;
+use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
-class TestCase extends \Orchestra\Testbench\TestCase
+class TestCase extends OrchestraTestCase
 {
     /**
      * Define environment setup.
