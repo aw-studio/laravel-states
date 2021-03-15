@@ -6,6 +6,7 @@ use AwStudio\States\Models\State;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
+use Illuminate\Database\SQLiteConnection;
 use Illuminate\Support\Str;
 use ReflectionClass;
 
@@ -389,9 +390,10 @@ trait HasStates
         }
 
         $query->whereExists(function ($existsQuery) use ($type, $value) {
+            $comparison = $this->getComparisonMethod($existsQuery);
             $existsQuery
                 ->from((new State)->getTable())
-                ->where("current_{$type}_state", $value);
+                ->{$comparison}("current_{$type}_state", $value);
             $this->scopeAddCurrentStateSelect($existsQuery, $type);
         });
     }
@@ -411,9 +413,10 @@ trait HasStates
         }
 
         $query->orWhereExists(function ($existsQuery) use ($type, $value) {
+            $comparison = $this->getComparisonMethod($existsQuery);
             $existsQuery
                 ->from((new State)->getTable())
-                ->where("current_{$type}_state", $value);
+                ->{$comparison}("current_{$type}_state", $value);
             $this->scopeAddCurrentStateSelect($existsQuery, $type);
         });
     }
@@ -430,8 +433,10 @@ trait HasStates
     {
         $query->where(function ($query) use ($type, $value) {
             $query->whereExists(function ($existsQuery) use ($type, $value) {
-                $existsQuery->from((new State)->getTable())
-                    ->whereNotIn("current_{$type}_state", Arr::wrap($value));
+                $comparison = $this->getComparisonMethod($existsQuery);
+                $existsQuery
+                    ->from((new State)->getTable())
+                    ->{$comparison}("current_{$type}_state", '!=', $value);
                 $this->scopeAddCurrentStateSelect($existsQuery, $type);
             });
 
@@ -439,6 +444,19 @@ trait HasStates
                 return $query->orWhereDoesntHaveStates($type);
             }
         });
+    }
+
+    /**
+     * Get comparison method.
+     *
+     * @param  Builder $builder
+     * @return string
+     */
+    protected function getComparisonMethod($builder)
+    {
+        return $builder->getConnection() instanceof SQLiteConnection
+            ? 'where'
+            : 'having';
     }
 
     /**
@@ -453,8 +471,10 @@ trait HasStates
     {
         $query->orWhere(function ($query) use ($type, $value) {
             $query->whereExists(function ($existsQuery) use ($type, $value) {
-                $existsQuery->from((new State)->getTable())
-                    ->whereNotIn("current_{$type}_state", Arr::wrap($value));
+                $comparison = $this->getComparisonMethod($existsQuery);
+                $existsQuery
+                    ->from((new State)->getTable())
+                    ->{$comparison}("current_{$type}_state", '!=', $value);
                 $this->scopeAddCurrentStateSelect($existsQuery, $type);
             });
 
