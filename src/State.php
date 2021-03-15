@@ -220,11 +220,15 @@ abstract class State implements Jsonable
         $transition = $this->getCurrentTransition($transition);
 
         $state = $this->stateful->states()->makeFromTransition(
-            $this->getType(), $transition
+            $this->getType(),
+            $transition
         );
         $state->save();
+        $this->stateful->reloadState();
 
         $this->stateful->fireStateEventsFor($this->getType(), $transition);
+
+        
 
         return $state;
     }

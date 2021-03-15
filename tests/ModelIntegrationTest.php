@@ -147,8 +147,17 @@ class ModelIntegrationTest extends TestCase
         $booking3 = Booking::create();
         $booking1->state->transition(BookingStateTransition::PAYMENT_PAID);
 
+        // dd(
+        // $booking1->state->current(),
+        // $booking2->state->current(),
+        // $booking3->state->current(),
+        // Booking::whereStateIsNot('state', BookingState::INITIAL_STATE)->count()
+        // );
+
         $this->assertSame(3, Booking::whereStateIsNot('state', BookingState::FAILED)->count());
         $this->assertSame(2, Booking::whereStateIsNot('state', BookingState::SUCCESSFULL)->count());
+        $this->assertSame(0, Booking::whereStateIsNot('state', [BookingState::SUCCESSFULL, BookingState::INITIAL_STATE])->count());
+        $this->assertSame(2, Booking::whereStateIsNot('state', [BookingState::SUCCESSFULL, BookingState::FAILED])->count());
         $this->assertSame(1, Booking::whereStateIsNot('state', BookingState::INITIAL_STATE)->count());
         $this->assertSame($booking1->id, Booking::whereStateIsNot('state', BookingState::INITIAL_STATE)->first()->id);
     }

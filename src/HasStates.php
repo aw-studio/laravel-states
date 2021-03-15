@@ -5,6 +5,7 @@ namespace AwStudio\States;
 use AwStudio\States\Models\State;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use ReflectionClass;
 
@@ -131,10 +132,8 @@ trait HasStates
     {
         $relation = $this->getCurrentStateRelationName($type);
 
-        $this->loadCurrentState();
-
         if (! $this->relationLoaded($relation)) {
-            $this->loadCurrentState();
+            $this->loadCurrentState($type);
         }
 
         $latest = $this->getRelation($relation);
@@ -431,13 +430,12 @@ trait HasStates
     {
         $query->where(function ($query) use ($type, $value) {
             $query->whereExists(function ($existsQuery) use ($type, $value) {
-                $existsQuery
-                    ->from((new State)->getTable())
-                    ->where("current_{$type}_state", '!=', $value);
+                $existsQuery->from((new State)->getTable())
+                    ->whereNotIn("current_{$type}_state", Arr::wrap($value));
                 $this->scopeAddCurrentStateSelect($existsQuery, $type);
             });
 
-            if ($this->getStateType($type)::INITIAL_STATE != $value) {
+            if (! in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
                 return $query->orWhereDoesntHaveStates($type);
             }
         });
@@ -446,22 +444,21 @@ trait HasStates
     /**
      * `orWhereStateIsNot` query scope.
      *
-     * @param  Builder $query
-     * @param  string  $type
-     * @param  string  $value
+     * @param  Builder      $query
+     * @param  string       $type
+     * @param  string|array $value
      * @return void
      */
     public function scopeOrWhereStateIsNot($query, $type, $value)
     {
         $query->orWhere(function ($query) use ($type, $value) {
             $query->whereExists(function ($existsQuery) use ($type, $value) {
-                $existsQuery
-                    ->from((new State)->getTable())
-                    ->where("current_{$type}_state", '!=', $value);
+                $existsQuery->from((new State)->getTable())
+                    ->whereNotIn("current_{$type}_state", Arr::wrap($value));
                 $this->scopeAddCurrentStateSelect($existsQuery, $type);
             });
 
-            if ($this->getStateType($type)::INITIAL_STATE != $value) {
+            if (! in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
                 return $query->orWhereDoesntHaveStates($type);
             }
         });
@@ -495,7 +492,8 @@ trait HasStates
      */
     public function scopeWithCurrentState($query, $type = 'state')
     {
-        $query->addCurrentStateSelect($type, 'id')->with($this->getCurrentStateRelationName($type));
+        $query->addCurrentStateSelect($type, 'id')
+            ->with($this->getCurrentStateRelationName($type));
     }
 
     /**
@@ -512,7 +510,8 @@ trait HasStates
             ->first();
 
         $this->setRelation(
-            $this->getCurrentStateRelationName($type), $currentState
+            $this->getCurrentStateRelationName($type),
+            $currentState
         );
 
         return $this;
