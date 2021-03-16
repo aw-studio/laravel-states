@@ -13,5 +13,6 @@ class State extends Model
      */
     protected $fillable = [
         'stateful_type', 'stateful_id', 'transition', 'from', 'state', 'type',
+        'reason',
     ];
 }

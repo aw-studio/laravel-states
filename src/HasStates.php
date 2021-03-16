@@ -5,8 +5,8 @@ namespace AwStudio\States;
 use AwStudio\States\Models\State;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Arr;
 use Illuminate\Database\SQLiteConnection;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use ReflectionClass;
 
@@ -18,6 +18,10 @@ trait HasStates
      * @var array
      */
     protected static $initialized = [];
+
+    protected $observableStateEvents = [
+        'changed' => 'changed',
+    ];
 
     /**
      * Initialize HasStates trait.
@@ -212,6 +216,17 @@ trait HasStates
 
         foreach ($reflector->getMethods() as $method) {
             foreach ($this->getStateTypes() as $type => $stateClass) {
+                foreach ($this->observableStateEvents as $event => $methodPrefix) {
+                    $methodName = $methodPrefix.ucfirst(Str::camel($type));
+                    if ($method->getName() != $methodName) {
+                        continue;
+                    }
+
+                    static::registerModelEvent(
+                        "{$event}.{$type}",
+                        $className.'@'.$method->getName()
+                    );
+                }
                 foreach ($stateClass::all() as $state) {
                     if (! $this->watchesObserverMethodState($method->getName(), $type, $state)) {
                         continue;
@@ -347,6 +362,7 @@ trait HasStates
     {
         $this->fireModelEvent($this->getTransitionEventName($type, $transition->name));
         $this->fireModelEvent($this->getStateEventName($type, $transition->to));
+        $this->fireModelEvent("changed.{$type}");
     }
 
     /**

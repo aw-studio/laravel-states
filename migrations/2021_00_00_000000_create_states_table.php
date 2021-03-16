@@ -18,6 +18,7 @@ class CreateStatesTable extends Migration
             $table->string('type');
             $table->string('state');
             $table->string('from');
+            $table->text('reason')->nullable();
             $table->string('transition')->nullable();
             $table->morphs('stateful');
             $table->timestamps();

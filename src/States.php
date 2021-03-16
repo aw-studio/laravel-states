@@ -30,16 +30,19 @@ class States extends MorphMany
     /**
      * Make state from transition.
      *
-     * @param  Transition $transition
+     * @param  string      $type
+     * @param  Transition  $transition
+     * @param  string|null $reason
      * @return StateModel
      */
-    public function makeFromTransition($type, Transition $transition)
+    public function makeFromTransition($type, Transition $transition, $reason = null)
     {
         return $this->make([
             'transition' => $transition->name,
             'from'       => $transition->from,
             'state'      => $transition->to,
             'type'       => $type,
+            'reason'     => $reason,
         ]);
     }
 }

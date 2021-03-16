@@ -193,11 +193,12 @@ abstract class State implements Jsonable
      *
      * @param  string $transition
      * @param  string $fail
+     * @param  string $reason
      * @return void
      *
      * @throws TransitionException
      */
-    public function transition($transition, $fail = true)
+    public function transition($transition, $fail = true, $reason = null)
     {
         if (! $this->can($transition)) {
             if ($this->transitionExists($transition)) {
@@ -221,14 +222,13 @@ abstract class State implements Jsonable
 
         $state = $this->stateful->states()->makeFromTransition(
             $this->getType(),
-            $transition
+            $transition,
+            $reason
         );
         $state->save();
         $this->stateful->reloadState();
 
         $this->stateful->fireStateEventsFor($this->getType(), $transition);
-
-        
 
         return $state;
     }
