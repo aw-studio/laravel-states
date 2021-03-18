@@ -3,10 +3,12 @@
 namespace AwStudio\States;
 
 use AwStudio\States\Models\State;
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\SQLiteConnection;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use ReflectionClass;
 
@@ -406,11 +408,19 @@ trait HasStates
         }
 
         $query->whereExists(function ($existsQuery) use ($type, $value) {
-            $comparison = $this->getComparisonMethod($existsQuery);
             $existsQuery
-                ->from((new State)->getTable())
-                ->{$comparison}("current_{$type}_state", $value);
-            $this->scopeAddCurrentStateSelect($existsQuery, $type);
+                ->from(DB::raw((new State)->getTable().' as _s'))
+                ->where('type', $type)
+                ->where('stateful_type', static::class)
+                ->whereColumn('stateful_id', $this->getTable().'.id')
+                ->where('state', $value)
+                ->whereNotExists(function ($notExistsQuery) {
+                    $notExistsQuery->from('states')
+                        ->where('type', 'state')
+                        ->where('stateful_type', static::class)
+                        ->whereColumn('stateful_id', $this->getTable().'.id')
+                        ->whereColumn('id', '>', '_s.id');
+                });
         });
     }
 
@@ -429,11 +439,19 @@ trait HasStates
         }
 
         $query->orWhereExists(function ($existsQuery) use ($type, $value) {
-            $comparison = $this->getComparisonMethod($existsQuery);
             $existsQuery
-                ->from((new State)->getTable())
-                ->{$comparison}("current_{$type}_state", $value);
-            $this->scopeAddCurrentStateSelect($existsQuery, $type);
+                ->from(DB::raw((new State)->getTable().' as _s'))
+                ->where('type', $type)
+                ->where('stateful_type', static::class)
+                ->whereColumn('stateful_id', $this->getTable().'.id')
+                ->where('state', $value)
+                ->whereNotExists(function ($notExistsQuery) {
+                    $notExistsQuery->from('states')
+                        ->where('type', 'state')
+                        ->where('stateful_type', static::class)
+                        ->whereColumn('stateful_id', $this->getTable().'.id')
+                        ->whereColumn('id', '>', '_s.id');
+                });
         });
     }
 
@@ -449,11 +467,19 @@ trait HasStates
     {
         $query->where(function ($query) use ($type, $value) {
             $query->whereExists(function ($existsQuery) use ($type, $value) {
-                $comparison = $this->getComparisonMethod($existsQuery);
                 $existsQuery
-                    ->from((new State)->getTable())
-                    ->{$comparison}("current_{$type}_state", '!=', $value);
-                $this->scopeAddCurrentStateSelect($existsQuery, $type);
+                    ->from(DB::raw((new State)->getTable().' as _s'))
+                    ->where('type', $type)
+                    ->where('stateful_type', static::class)
+                    ->whereColumn('stateful_id', $this->getTable().'.id')
+                    ->where('state', '!=', $value)
+                    ->whereNotExists(function ($notExistsQuery) {
+                        $notExistsQuery->from('states')
+                            ->where('type', 'state')
+                            ->where('stateful_type', static::class)
+                            ->whereColumn('stateful_id', $this->getTable().'.id')
+                            ->whereColumn('id', '>', '_s.id');
+                    });
             });
 
             if (! in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
@@ -487,11 +513,19 @@ trait HasStates
     {
         $query->orWhere(function ($query) use ($type, $value) {
             $query->whereExists(function ($existsQuery) use ($type, $value) {
-                $comparison = $this->getComparisonMethod($existsQuery);
                 $existsQuery
-                    ->from((new State)->getTable())
-                    ->{$comparison}("current_{$type}_state", '!=', $value);
-                $this->scopeAddCurrentStateSelect($existsQuery, $type);
+                    ->from(DB::raw((new State)->getTable().' as _s'))
+                    ->where('type', $type)
+                    ->where('stateful_type', static::class)
+                    ->whereColumn('stateful_id', $this->getTable().'.id')
+                    ->where('state', '!=', $value)
+                    ->whereNotExists(function ($notExistsQuery) {
+                        $notExistsQuery->from('states')
+                            ->where('type', 'state')
+                            ->where('stateful_type', static::class)
+                            ->whereColumn('stateful_id', $this->getTable().'.id')
+                            ->whereColumn('id', '>', '_s.id');
+                    });
             });
 
             if (! in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
@@ -508,7 +542,7 @@ trait HasStates
      * @param  string  $select
      * @return void
      */
-    public function scopeAddCurrentStateSelect($query, $type = 'state', $select = 'state')
+    public function scopeAddCurrentStateSelect($query, $type = 'state', $select = 'state', Closure $closure = null)
     {
         $query->addSelect(["current_{$type}_{$select}" => State::select($select)
             ->where('type', $type)
