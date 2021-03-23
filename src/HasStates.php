@@ -394,6 +394,44 @@ trait HasStates
     }
 
     /**
+     * `whereDidHaveState` query scope.
+     *
+     * @param  Builder $query
+     * @param  string  $type
+     * @param  string  $value
+     * @return void
+     */
+    public function scopeWhereDidHaveState($query, $type, $value)
+    {
+        if ($this->getStateType($type)::INITIAL_STATE == $value) {
+            return;
+        }
+
+        $query->whereHas('states', function ($statesQuery) use ($type, $value) {
+            $statesQuery
+                ->where('type', $type)
+                ->where('state', $value);
+        });
+    }
+
+    /**
+     * `whereDidNotHaveState` query scope.
+     *
+     * @param  Builder $query
+     * @param  string  $type
+     * @param  string  $value
+     * @return void
+     */
+    public function scopeWhereDidNotHaveState($query, $type, $value)
+    {
+        $query->whereDoesntHave('states', function ($statesQuery) use ($type, $value) {
+            $statesQuery
+                ->where('type', $type)
+                ->where('state', $value);
+        });
+    }
+
+    /**
      * `whereStateIs` query scope.
      *
      * @param  Builder $query
@@ -456,6 +494,37 @@ trait HasStates
     }
 
     /**
+     * `whereStateIn` query scope.
+     *
+     * @param  Builder $query
+     * @param  string  $type
+     * @param  array   $value
+     * @return void
+     */
+    public function scopeWhereStateIsIn($query, $type, array $value)
+    {
+        if ($this->getStateType($type)::INITIAL_STATE == $value) {
+            return $query->whereDoesntHaveStates($type);
+        }
+
+        $query->whereExists(function ($existsQuery) use ($type, $value) {
+            $existsQuery
+                ->from(DB::raw((new State)->getTable().' as _s'))
+                ->where('type', $type)
+                ->where('stateful_type', static::class)
+                ->whereColumn('stateful_id', $this->getTable().'.id')
+                ->whereIn('state', $value)
+                ->whereNotExists(function ($notExistsQuery) {
+                    $notExistsQuery->from('states')
+                        ->where('type', 'state')
+                        ->where('stateful_type', static::class)
+                        ->whereColumn('stateful_id', $this->getTable().'.id')
+                        ->whereColumn('id', '>', '_s.id');
+                });
+        });
+    }
+
+    /**
      * `whereStateIsNot` query scope.
      *
      * @param  Builder $query
@@ -473,6 +542,39 @@ trait HasStates
                     ->where('stateful_type', static::class)
                     ->whereColumn('stateful_id', $this->getTable().'.id')
                     ->where('state', '!=', $value)
+                    ->whereNotExists(function ($notExistsQuery) {
+                        $notExistsQuery->from('states')
+                            ->where('type', 'state')
+                            ->where('stateful_type', static::class)
+                            ->whereColumn('stateful_id', $this->getTable().'.id')
+                            ->whereColumn('id', '>', '_s.id');
+                    });
+            });
+
+            if (! in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
+                return $query->orWhereDoesntHaveStates($type);
+            }
+        });
+    }
+
+    /**
+     * `whereStateIsNot` query scope.
+     *
+     * @param  Builder $query
+     * @param  string  $type
+     * @param  array   $value
+     * @return void
+     */
+    public function scopeWhereStateIsNotIn($query, $type, array $value)
+    {
+        $query->where(function ($query) use ($type, $value) {
+            $query->whereExists(function ($existsQuery) use ($type, $value) {
+                $existsQuery
+                    ->from(DB::raw((new State)->getTable().' as _s'))
+                    ->where('type', $type)
+                    ->where('stateful_type', static::class)
+                    ->whereColumn('stateful_id', $this->getTable().'.id')
+                    ->whereNotIn('state', $value)
                     ->whereNotExists(function ($notExistsQuery) {
                         $notExistsQuery->from('states')
                             ->where('type', 'state')
