@@ -263,7 +263,7 @@ abstract class State implements Jsonable
      */
     public function reload()
     {
-        $this->stateful->reloadState();
+        $this->stateful->reloadState($this->getType());
 
         return $this;
     }
