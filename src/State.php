@@ -21,7 +21,7 @@ abstract class State implements Jsonable
 
     /**
      * Stateful instance.
-     *
+     *dd($item->ticket_state->current());.
      * @var Stateful|Model
      */
     protected $stateful;
@@ -226,7 +226,10 @@ abstract class State implements Jsonable
             $reason
         );
         $state->save();
-        $this->stateful->reloadState();
+        $this->stateful->setRelation(
+            $this->stateful->getCurrentStateRelationName($this->getType()),
+            $state
+        );
 
         $this->stateful->fireStateEventsFor($this->getType(), $transition);
 
@@ -254,6 +257,18 @@ abstract class State implements Jsonable
     public function is($state)
     {
         return $this->current() == $state;
+    }
+
+    /**
+     * Reload the state.
+     *
+     * @return $this
+     */
+    public function reload()
+    {
+        $this->stateful->reloadState($this->getType());
+
+        return $this;
     }
 
     /**
