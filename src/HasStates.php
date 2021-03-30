@@ -452,9 +452,9 @@ trait HasStates
                 ->where('stateful_type', static::class)
                 ->whereColumn('stateful_id', $this->getTable().'.id')
                 ->where('state', $value)
-                ->whereNotExists(function ($notExistsQuery) {
+                ->whereNotExists(function ($notExistsQuery) use ($type) {
                     $notExistsQuery->from('states')
-                        ->where('type', 'state')
+                        ->where('type', $type)
                         ->where('stateful_type', static::class)
                         ->whereColumn('stateful_id', $this->getTable().'.id')
                         ->whereColumn('id', '>', '_s.id');
@@ -483,9 +483,9 @@ trait HasStates
                 ->where('stateful_type', static::class)
                 ->whereColumn('stateful_id', $this->getTable().'.id')
                 ->where('state', $value)
-                ->whereNotExists(function ($notExistsQuery) {
+                ->whereNotExists(function ($notExistsQuery) use ($type) {
                     $notExistsQuery->from('states')
-                        ->where('type', 'state')
+                        ->where('type', $type)
                         ->where('stateful_type', static::class)
                         ->whereColumn('stateful_id', $this->getTable().'.id')
                         ->whereColumn('id', '>', '_s.id');
@@ -514,9 +514,9 @@ trait HasStates
                 ->where('stateful_type', static::class)
                 ->whereColumn('stateful_id', $this->getTable().'.id')
                 ->whereIn('state', $value)
-                ->whereNotExists(function ($notExistsQuery) {
+                ->whereNotExists(function ($notExistsQuery) use ($type) {
                     $notExistsQuery->from('states')
-                        ->where('type', 'state')
+                        ->where('type', $type)
                         ->where('stateful_type', static::class)
                         ->whereColumn('stateful_id', $this->getTable().'.id')
                         ->whereColumn('id', '>', '_s.id');
@@ -542,9 +542,9 @@ trait HasStates
                     ->where('stateful_type', static::class)
                     ->whereColumn('stateful_id', $this->getTable().'.id')
                     ->where('state', '!=', $value)
-                    ->whereNotExists(function ($notExistsQuery) {
+                    ->whereNotExists(function ($notExistsQuery) use ($type) {
                         $notExistsQuery->from('states')
-                            ->where('type', 'state')
+                            ->where('type', $type)
                             ->where('stateful_type', static::class)
                             ->whereColumn('stateful_id', $this->getTable().'.id')
                             ->whereColumn('id', '>', '_s.id');
@@ -575,9 +575,9 @@ trait HasStates
                     ->where('stateful_type', static::class)
                     ->whereColumn('stateful_id', $this->getTable().'.id')
                     ->whereNotIn('state', $value)
-                    ->whereNotExists(function ($notExistsQuery) {
+                    ->whereNotExists(function ($notExistsQuery) use ($type) {
                         $notExistsQuery->from('states')
-                            ->where('type', 'state')
+                            ->where('type', $type)
                             ->where('stateful_type', static::class)
                             ->whereColumn('stateful_id', $this->getTable().'.id')
                             ->whereColumn('id', '>', '_s.id');
@@ -621,9 +621,9 @@ trait HasStates
                     ->where('stateful_type', static::class)
                     ->whereColumn('stateful_id', $this->getTable().'.id')
                     ->where('state', '!=', $value)
-                    ->whereNotExists(function ($notExistsQuery) {
+                    ->whereNotExists(function ($notExistsQuery) use ($type) {
                         $notExistsQuery->from('states')
-                            ->where('type', 'state')
+                            ->where('type', $type)
                             ->where('stateful_type', static::class)
                             ->whereColumn('stateful_id', $this->getTable().'.id')
                             ->whereColumn('id', '>', '_s.id');
