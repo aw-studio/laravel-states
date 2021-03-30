@@ -226,7 +226,10 @@ abstract class State implements Jsonable
             $reason
         );
         $state->save();
-        $this->reload();
+        $this->stateful->setRelation(
+            $this->stateful->getCurrentStateRelationName($this->getType()),
+            $state
+        );
 
         $this->stateful->fireStateEventsFor($this->getType(), $transition);
 
