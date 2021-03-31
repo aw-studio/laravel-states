@@ -90,10 +90,12 @@ class Booking extends Model implements Stateful
 $booking->state->current(); // "pending"
 (string) $booking->state; // "pending"
 $booking->state->is(BookingState::PENDING); // true
+$booking->state->was(BookingState::PENDING); // true
 $booking->state->can(BookingStateTransition::PAYMENT_PAID); // true
 $booking->state->transition(BookingStateTransition::PAYMENT_PAID); // changes state from "pending to "successful"
-$booking->reloadState(); // reload the current state
-$booking->reloadState('payment_state');
+$booking->state->reload(); // reload the current state
+$booking->loadCurrentState();
+$booking->loadCurrentState('payment_state');
 ```
 
 ## Query Methods
@@ -104,4 +106,6 @@ Booking::whereStateIs('payment_state', PaymentState::PAID);
 Booking::orWhereStateIs('payment_state', PaymentState::PAID);
 Booking::whereStateIsNot('payment_state', PaymentState::PAID);
 Booking::orWhereStateIsNot('payment_state', PaymentState::PAID);
+Booking::whereStateWas('payment_state', PaymentState::PAID);
+Booking::whereStateWasNot('payment_state', PaymentState::PAID);
 ```
