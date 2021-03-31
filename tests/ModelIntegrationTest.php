@@ -71,6 +71,24 @@ class ModelIntegrationTest extends TestCase
     }
 
     /** @test */
+    public function test_state_was_method()
+    {
+        $booking = Booking::create();
+        $booking->state->transition(BookingStateTransition::PAYMENT_PAID);
+        $this->assertTrue($booking->state->was(BookingState::SUCCESSFULL));
+        $this->assertFalse($booking->state->was(BookingState::FAILED));
+    }
+
+    /** @test */
+    public function test_state_was_method_for_initial_state()
+    {
+        $booking = Booking::create();
+        $this->assertTrue($booking->state->was(BookingState::INITIAL_STATE));
+        $this->assertFalse($booking->state->was(BookingState::SUCCESSFULL));
+        $this->assertFalse($booking->state->was(BookingState::FAILED));
+    }
+
+    /** @test */
     public function test_withCurrentState_method()
     {
         $booking = Booking::create();

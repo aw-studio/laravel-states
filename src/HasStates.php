@@ -394,14 +394,14 @@ trait HasStates
     }
 
     /**
-     * `whereDidHaveState` query scope.
+     * `whereStateWas` query scope.
      *
      * @param  Builder $query
      * @param  string  $type
      * @param  string  $value
      * @return void
      */
-    public function scopeWhereDidHaveState($query, $type, $value)
+    public function scopeWhereStateWas($query, $type, $value)
     {
         if ($this->getStateType($type)::INITIAL_STATE == $value) {
             return;
@@ -415,14 +415,14 @@ trait HasStates
     }
 
     /**
-     * `whereDidNotHaveState` query scope.
+     * `whereNotHaveWasNot` query scope.
      *
      * @param  Builder $query
      * @param  string  $type
      * @param  string  $value
      * @return void
      */
-    public function scopeWhereDidNotHaveState($query, $type, $value)
+    public function scopeWhereNotHaveWasNot($query, $type, $value)
     {
         $query->whereDoesntHave('states', function ($statesQuery) use ($type, $value) {
             $statesQuery

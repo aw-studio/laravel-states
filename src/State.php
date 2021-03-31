@@ -249,6 +249,23 @@ abstract class State implements Jsonable
     }
 
     /**
+     * Determine wether state was the given state.
+     *
+     * @return bool
+     */
+    public function was($state)
+    {
+        if ($state == static::INITIAL_STATE) {
+            return true;
+        }
+
+        return $this->stateful
+            ->states($this->getType())
+            ->where('state', $state)
+            ->exists();
+    }
+
+    /**
      * Determine if the current state is the given state.
      *
      * @param  string $state
