@@ -90,6 +90,7 @@ class Booking extends Model implements Stateful
 $booking->state->current(); // "pending"
 (string) $booking->state; // "pending"
 $booking->state->is(BookingState::PENDING); // true
+$booking->state->isAnyOf(BookingState::FINAL_STATES); // true
 $booking->state->was(BookingState::PENDING); // true
 $booking->state->can(BookingStateTransition::PAYMENT_PAID); // true
 $booking->state->transition(BookingStateTransition::PAYMENT_PAID); // changes state from "pending to "successful"
