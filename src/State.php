@@ -2,14 +2,15 @@
 
 namespace AwStudio\States;
 
-use AwStudio\States\Contracts\Stateful;
-use AwStudio\States\Exceptions\TransitionException;
-use Illuminate\Contracts\Support\Jsonable;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use ReflectionClass;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use AwStudio\States\Contracts\Stateful;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Contracts\Support\Jsonable;
+use AwStudio\States\Exceptions\TransitionException;
 
 abstract class State implements Jsonable
 {
@@ -190,6 +191,22 @@ abstract class State implements Jsonable
     }
 
     /**
+     * Lock the current state for update.
+     *
+     * @return $this
+     */
+    public function lockForUpdate()
+    {
+        $this->stateful
+            ->states()
+            ->where('type', $this->type)
+            ->lockForUpdate()
+            ->count();
+
+        return $this;
+    }
+
+    /**
      * Execute transition.
      *
      * @param  string $transition
@@ -201,32 +218,39 @@ abstract class State implements Jsonable
      */
     public function transition($transition, $fail = true, $reason = null)
     {
-        if (! $this->can($transition)) {
-            if ($this->transitionExists($transition)) {
-                Log::warning('Unallowed transition.', [
-                    'transition' => $transition,
-                    'type'       => $this->type,
-                    'current'    => $this->current(),
-                ]);
+        [$state, $transition] = DB::transaction(function () use ($transition, $fail, $reason) {
+            $this->reload()->lockForUpdate();
+            if (! $this->can($transition)) {
+                if ($this->transitionExists($transition)) {
+                    Log::warning('Unallowed transition.', [
+                        'transition' => $transition,
+                        'type'       => $this->type,
+                        'current'    => $this->current(),
+                    ]);
+                }
+    
+                if (! $fail) {
+                    return;
+                }
+    
+                throw new TransitionException(
+                    "Transition [{$transition}] to change [{$this->type}] not allowed for [".$this->current().']'
+                );
             }
-
-            if (! $fail) {
-                return;
-            }
-
-            throw new TransitionException(
-                "Transition [{$transition}] to change [{$this->type}] not allowed for [".$this->current().']'
+    
+            $transition = $this->getCurrentTransition($transition);
+    
+            $state = $this->stateful->states()->makeFromTransition(
+                $this->getType(),
+                $transition,
+                $reason
             );
-        }
+            $state->save();
 
-        $transition = $this->getCurrentTransition($transition);
+            return [$state, $transition];
+        });
 
-        $state = $this->stateful->states()->makeFromTransition(
-            $this->getType(),
-            $transition,
-            $reason
-        );
-        $state->save();
+
         $this->stateful->setRelation(
             $this->stateful->getCurrentStateRelationName($this->getType()),
             $state
