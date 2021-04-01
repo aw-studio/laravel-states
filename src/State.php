@@ -6,6 +6,7 @@ use AwStudio\States\Contracts\Stateful;
 use AwStudio\States\Exceptions\TransitionException;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use ReflectionClass;
@@ -268,12 +269,23 @@ abstract class State implements Jsonable
     /**
      * Determine if the current state is the given state.
      *
-     * @param  string $state
+     * @param  string|array $state
      * @return bool
      */
     public function is($state)
     {
-        return $this->current() == $state;
+        return in_array($this->current(), Arr::wrap($state));
+    }
+
+    /**
+     * Determine if the current state is any of the given states.
+     *
+     * @param  array $states
+     * @return bool
+     */
+    public function isAnyOf($states)
+    {
+        return in_array($this->current(), $states);
     }
 
     /**

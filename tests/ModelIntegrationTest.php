@@ -71,6 +71,30 @@ class ModelIntegrationTest extends TestCase
     }
 
     /** @test */
+    public function test_state_is_method()
+    {
+        $booking = Booking::create();
+        $this->assertTrue($booking->state->is(BookingState::PENDING));
+        $booking->state->transition(BookingStateTransition::PAYMENT_PAID);
+        $this->assertTrue($booking->state->is(BookingState::SUCCESSFULL));
+        $this->assertFalse($booking->state->is(BookingState::FAILED));
+    }
+
+    /** @test */
+    public function test_state_is_any_of_method()
+    {
+        $booking = Booking::create();
+        $this->assertTrue($booking->state->isAnyOf([
+            BookingState::PENDING,
+            BookingState::SUCCESSFULL,
+        ]));
+        $this->assertFalse($booking->state->isAnyOf([
+            BookingState::FAILED,
+            BookingState::SUCCESSFULL,
+        ]));
+    }
+
+    /** @test */
     public function test_state_was_method()
     {
         $booking = Booking::create();
