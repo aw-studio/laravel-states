@@ -216,14 +216,14 @@ abstract class State implements Jsonable
      *
      * @throws TransitionException
      */
-    public function transition($transition, $fail = true, $reason = null)
+    public function transition($name, $fail = true, $reason = null)
     {
-        [$state, $transition] = DB::transaction(function () use ($transition, $fail, $reason) {
+        [$state, $transition] = DB::transaction(function () use ($name, $fail, $reason) {
             $this->reload()->lockForUpdate();
-            if (! $this->can($transition)) {
-                if ($this->transitionExists($transition)) {
+            if (! $this->can($name)) {
+                if ($this->transitionExists($name)) {
                     Log::warning('Unallowed transition.', [
-                        'transition' => $transition,
+                        'transition' => $name,
                         'type'       => $this->type,
                         'current'    => $this->current(),
                     ]);
@@ -234,11 +234,11 @@ abstract class State implements Jsonable
                 }
     
                 throw new TransitionException(
-                    "Transition [{$transition}] to change [{$this->type}] not allowed for [".$this->current().']'
+                    "Transition [{$name}] to change [{$this->type}] not allowed for [".$this->current().']'
                 );
             }
     
-            $transition = $this->getCurrentTransition($transition);
+            $transition = $this->getCurrentTransition($name);
     
             $state = $this->stateful->states()->makeFromTransition(
                 $this->getType(),
@@ -250,6 +250,9 @@ abstract class State implements Jsonable
             return [$state, $transition];
         });
 
+        if (! $transition) {
+            return;
+        }
 
         $this->stateful->setRelation(
             $this->stateful->getCurrentStateRelationName($this->getType()),
