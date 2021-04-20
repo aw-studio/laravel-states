@@ -248,7 +248,7 @@ abstract class State implements Jsonable
             $state->save();
 
             return [$state, $transition];
-        });
+        }, 5);
 
         if (! $transition) {
             return;
