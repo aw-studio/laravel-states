@@ -2,15 +2,15 @@
 
 namespace AwStudio\States;
 
-use ReflectionClass;
+use AwStudio\States\Contracts\Stateful;
+use AwStudio\States\Exceptions\TransitionException;
+use Illuminate\Contracts\Support\Jsonable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use AwStudio\States\Contracts\Stateful;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Contracts\Support\Jsonable;
-use AwStudio\States\Exceptions\TransitionException;
+use Illuminate\Support\Str;
+use ReflectionClass;
 
 abstract class State implements Jsonable
 {
@@ -57,6 +57,39 @@ abstract class State implements Jsonable
             ]))
             ->values()
             ->toArray();
+    }
+
+    /**
+     * Get states from where the given transition can be executed.
+     *
+     * @param  string $transition
+     * @return array
+     */
+    public static function whereCan($transition)
+    {
+        return collect(static::all())
+            ->filter(function ($state) use ($transition) {
+                return static::canTransitionFrom($state, $transition);
+            })
+            ->values()
+            ->toArray();
+    }
+
+    /**
+     * Determines wether the given transition can be executed for the given
+     * state.
+     *
+     * @param  string $state
+     * @param  string $transition
+     * @return bool
+     */
+    public static function canTransitionFrom($state, $transition)
+    {
+        return (bool) collect(static::getTransitions())
+            ->first(function (Transition $t) use ($state, $transition) {
+                return $t->from == $state
+                    && $t->name == $transition;
+            });
     }
 
     /**
@@ -228,18 +261,18 @@ abstract class State implements Jsonable
                         'current'    => $this->current(),
                     ]);
                 }
-    
+
                 if (! $fail) {
                     return;
                 }
-    
+
                 throw new TransitionException(
                     "Transition [{$name}] to change [{$this->type}] not allowed for [".$this->current().']'
                 );
             }
-    
+
             $transition = $this->getCurrentTransition($name);
-    
+
             $state = $this->stateful->states()->makeFromTransition(
                 $this->getType(),
                 $transition,

@@ -20,6 +20,20 @@ class StateTest extends TestCase
             'hello_world',
         ], DummyState::uniqueTransitions());
     }
+
+    public function test_whereCan_method()
+    {
+        $this->assertEquals([
+            DummyState::FOO,
+        ], DummyState::whereCan('hello_world'));
+    }
+
+    public function test_canTransitionFrom_method()
+    {
+        $this->assertTrue(DummyState::canTransitionFrom('foo', 'hello_world'));
+        $this->assertFalse(DummyState::canTransitionFrom('bar', 'hello_world'));
+        $this->assertFalse(DummyState::canTransitionFrom('foo', 'bar'));
+    }
 }
 
 class DummyState extends State
