@@ -100,6 +100,13 @@ $booking->loadCurrentState();
 $booking->loadCurrentState('payment_state');
 ```
 
+Static Methods:
+
+```php
+BookingState::whereCan(BookingStateTransition::PAYMENT_PAID); // Gets states where from where the given transition can be executed.
+BookingState::canTransitionFrom('pending', 'cancel'); // Determines if the transition can be executed for the given state.
+```
+
 ## Query Methods
 
 ```php
