@@ -591,19 +591,6 @@ trait HasStates
     }
 
     /**
-     * Get comparison method.
-     *
-     * @param  Builder $builder
-     * @return string
-     */
-    protected function getComparisonMethod($builder)
-    {
-        return $builder->getConnection() instanceof SQLiteConnection
-            ? 'where'
-            : 'having';
-    }
-
-    /**
      * `orWhereStateIsNot` query scope.
      *
      * @param  Builder      $query
