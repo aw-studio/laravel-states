@@ -108,6 +108,8 @@ $booking->state->isAnyOf(BookingState::FINAL_STATES); // true
 $booking->state->was(BookingState::PENDING); // true
 $booking->state->can(BookingStateTransition::PAYMENT_PAID); // true
 $booking->state->transition(BookingStateTransition::PAYMENT_PAID); // changes state from "pending to "successful"
+$booking->state->transition(BookingStateTransition::PAYMENT_PAID, fail: false); // Dont throw exception when transition is not allowed for current_state
+$booking->state->transition(BookingStateTransition::PAYMENT_PAID, reason: "Mollie API call failed."); // Store adittional information about the reason of a transition.
 $booking->state->reload(); // reload the current state
 $booking->state->lockForUpdate(); // Locks the state for update
 $booking->loadCurrentState();
