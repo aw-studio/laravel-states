@@ -8,7 +8,7 @@ The package stores all states in a database table, so all states changes and the
 
 ## A Recommendation
 
-Use states wherever possible! A state can be used instead of an `active` boolean:
+Use states wherever possible! A state can be used instead of booleans like `active` or timestamps like `declined_at` or `deleted_at`:
 
 ```php
 $product->state->is('active');
