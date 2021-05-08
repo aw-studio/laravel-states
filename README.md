@@ -100,39 +100,118 @@ class Booking extends Model implements Stateful
 
 ## Usage
 
+### Receive The Current State
+
 ```php
 $booking->state->current(); // "pending"
 (string) $booking->state; // "pending"
-$booking->state->is(BookingState::PENDING); // true
-$booking->state->isAnyOf(BookingState::FINAL_STATES); // true
-$booking->state->was(BookingState::PENDING); // true
-$booking->state->can(BookingStateTransition::PAYMENT_PAID); // true
-$booking->state->transition(BookingStateTransition::PAYMENT_PAID); // changes state from "pending to "successful"
-$booking->state->transition(BookingStateTransition::PAYMENT_PAID, fail: false); // Dont throw exception when transition is not allowed for current_state
-$booking->state->transition(BookingStateTransition::PAYMENT_PAID, reason: "Mollie API call failed."); // Store additional information about the reason of a transition.
-$booking->state->reload(); // reload the current state
-$booking->state->lockForUpdate(); // Locks the state for update
+```
+
+Determine if the current state is a given state:
+
+```php
+if($booking->state->is(BookingState::PENDING)) {
+    //
+}
+```
+
+Determine if the current state is any of a the given states:
+
+```php
+$states = [
+    BookingState::PENDING,
+    BookingState::SUCCESSFULL
+];
+if($booking->state->isAnyOf($states)) {
+    //
+}
+```
+
+Determine if the state has been the given state at any time:
+
+```php
+if($booking->state->was(BookingState::PENDING)) {
+    //
+}
+```
+
+### Transitions
+
+Execute a state transition:
+
+```php
+$booking->state->transition(BookingStateTransition::PAYMENT_PAID);
+```
+
+Prevent throwing an exception when the given transition is not allowed for the current state by setting fail to `false`:
+
+```php
+$booking->state->transition(BookingStateTransition::PAYMENT_PAID, fail: false);
+```
+
+Store additional information about the reason of a transition.
+
+```php
+$booking->state->transition(BookingStateTransition::PAYMENT_PAID, reason: "Mollie API call failed.");
+```
+
+Determine wether the transition is allowed for the current state:
+
+```php
+$booking->state->can(BookingStateTransition::PAYMENT_PAID);
+```
+
+Lock the current state for update at the start of a transaction so the state can not be modified by simultansiously requests until the transaction is finished:
+
+```php
+DB::transaction(function() {
+    // Lock the current state for update:
+    $booking->state->lockForUpdate();
+    
+    // ...
+});
+
+```
+
+### Loading States
+
+Reload the current state:
+
+```php
+$booking->state->reload();
+```
+
+Eager load the current state:
+
+```php
+Booking::withCurrentState();
+Booking::withCurrentState('payment_state');
+
 $booking->loadCurrentState();
 $booking->loadCurrentState('payment_state');
-$booking->states()->get() // Get all states.
-$booking->states('payment_state')->get() // Get all payment states.
 ```
 
-Static Methods:
+Filter models that have or dont have a current state:
 
 ```php
-BookingState::whereCan(BookingStateTransition::PAYMENT_PAID); // Gets states where from where the given transition can be executed.
-BookingState::canTransitionFrom('pending', 'cancel'); // Determines if the transition can be executed for the given state.
-```
-
-## Query Methods
-
-```php
-Booking::withCurrentState(); // eager loading the current state
 Booking::whereStateIs('payment_state', PaymentState::PAID);
 Booking::orWhereStateIs('payment_state', PaymentState::PAID);
 Booking::whereStateIsNot('payment_state', PaymentState::PAID);
 Booking::orWhereStateIsNot('payment_state', PaymentState::PAID);
 Booking::whereStateWas('payment_state', PaymentState::PAID);
 Booking::whereStateWasNot('payment_state', PaymentState::PAID);
+```
+
+Receive state changes:
+
+```php
+$booking->states()->get() // Get all states.
+$booking->states('payment_state')->get() // Get all payment states.
+```
+
+## Static Methods:
+
+```php
+BookingState::whereCan(BookingStateTransition::PAYMENT_PAID); // Gets states where from where the given transition can be executed.
+BookingState::canTransitionFrom('pending', 'cancel'); // Determines if the transition can be executed for the given state.
 ```
