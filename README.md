@@ -2,8 +2,6 @@
 
 A package to make use of the **finite state pattern** in eloquent Models.
 
-## Introduction
-
 The package stores all states in a database table, so all states changes and the corresponding times can be traced. Since states are mapped via a relation, no additional migrations need to be created when a new state is needed for a model.
 
 ## A Recommendation
@@ -15,6 +13,20 @@ $product->state->is('active');
 ```
 
 This way you also know when the change to active has taken place. Also your app becomes more scalable, you can simply add an additional state if needed.
+
+## Table Of Contents
+
+- [Setup](#setup)
+- [Basics](#basics)
+- [Usage](#usage)
+    - [Receive The Current State](#receive-state)
+    - [Execute Transitions](#execute-transitions)
+    - [Eager Loading](#eager-loading)
+    - [Query Methods](#query)
+- [Observer Events](#events)
+
+
+<a name="setup"></a>
 
 ## Setup
 
@@ -98,7 +110,11 @@ class Booking extends Model implements Stateful
 }
 ```
 
+<a name="usage"></a>
+
 ## Usage
+
+<a name="receive-state"></a>
 
 ### Receive The Current State
 
@@ -135,7 +151,9 @@ if($booking->state->was(BookingState::PENDING)) {
 }
 ```
 
-### Transitions
+<a name="transitions"></a>
+
+### Execute Transitions
 
 Execute a state transition:
 
@@ -173,7 +191,9 @@ DB::transaction(function() {
 
 ```
 
-### Loading States
+<a name="eager-loading"></a>
+
+### Eager Loading
 
 Reload the current state:
 
@@ -190,6 +210,10 @@ Booking::withCurrentState('payment_state');
 $booking->loadCurrentState();
 $booking->loadCurrentState('payment_state');
 ```
+
+<a name="query"></a>
+
+### Query Methods
 
 Filter models that have or dont have a current state:
 
@@ -208,6 +232,8 @@ Receive state changes:
 $booking->states()->get() // Get all states.
 $booking->states('payment_state')->get() // Get all payment states.
 ```
+
+<a name="events"></a>
 
 ## Observer Events
 
