@@ -6,6 +6,16 @@ A package to make use of the **finite state pattern** in eloquent Models.
 
 The package stores all states in a database table, so all states changes and the corresponding times can be traced. Since states are mapped via a relation, no additional migrations need to be created when a new state is needed for a model.
 
+## A Recommendation
+
+Use states wherever possible! A state can be used instead of an `active` boolean:
+
+```php
+$product->state->is('active');
+```
+
+This way you also know when the change to active has taken place. Also your app becomes more scalable, you can simply add an additional state if needed.
+
 ## Setup
 
 1. Install the package via composer:
@@ -102,6 +112,8 @@ $booking->state->reload(); // reload the current state
 $booking->state->lockForUpdate(); // Locks the state for update
 $booking->loadCurrentState();
 $booking->loadCurrentState('payment_state');
+$booking->states()->get() // Get all states.
+$booking->states('payment_state')->get() // Get all payment states.
 ```
 
 Static Methods:
