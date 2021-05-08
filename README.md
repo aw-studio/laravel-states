@@ -209,6 +209,30 @@ $booking->states()->get() // Get all states.
 $booking->states('payment_state')->get() // Get all payment states.
 ```
 
+## Observer Events
+
+Listen to state changes or transitions in your model observer:
+
+```php
+class BookingObserver
+{
+    public function stateSuccessfull(Booking $booking)
+    {
+        // Gets fired when booking state changed to successfull.
+    }
+    
+    public function paymentStatePaid(Booking $booking)
+    {
+        // Gets fired when booking payment_state changed to paid.
+    }
+    
+    public function stateTransitionPaymentPaid(Booking $booking)
+    {
+        // Gets fired when state transition payment_paid gets fired.
+    }
+}
+```
+
 ## Static Methods:
 
 ```php
