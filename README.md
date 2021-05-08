@@ -4,7 +4,7 @@ A package to make use of the **finite state pattern** in eloquent Models.
 
 ## Introduction
 
-The package stores all states in a table, so the course of the states and the corresponding times can be traced.
+The package stores all states in a database table, so all states changes and the corresponding times can be traced. Since states are mapped via a relation, no additional migrations need to be created when a new state is needed for a model.
 
 ## Setup
 
