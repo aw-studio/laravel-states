@@ -2,6 +2,10 @@
 
 A package to make use of the **finite state pattern** in eloquent Models.
 
+## Introduction
+
+The package stores all states in a table, so the course of the states and the corresponding times can be traced.
+
 ## Setup
 
 1. Install the package via composer:
