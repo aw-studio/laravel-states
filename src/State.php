@@ -53,7 +53,7 @@ abstract class State implements Jsonable
         $reflector = new ReflectionClass(static::class);
 
         return collect($reflector->getConstants())
-            ->filter(fn ($value, $key) => !in_array($key, [
+            ->filter(fn ($value, $key) => ! in_array($key, [
                 'INITIAL_STATE', 'FINAL_STATES',
             ]))
             ->values()
@@ -105,7 +105,7 @@ abstract class State implements Jsonable
         $transitions = [];
 
         foreach (static::getTransitions() as $transition) {
-            if (!in_array($transition->name, $transitions)) {
+            if (! in_array($transition->name, $transitions)) {
                 $transitions[] = $transition->name;
             }
         }
@@ -122,7 +122,7 @@ abstract class State implements Jsonable
      */
     public static function set($transition)
     {
-        if (!array_key_exists(static::class, static::$transitions)) {
+        if (! array_key_exists(static::class, static::$transitions)) {
             static::$transitions[static::class] = [];
         }
 
@@ -140,7 +140,7 @@ abstract class State implements Jsonable
      */
     public static function getTransitions()
     {
-        if (!array_key_exists(static::class, static::$transitions)) {
+        if (! array_key_exists(static::class, static::$transitions)) {
             static::config();
         }
 
@@ -262,7 +262,7 @@ abstract class State implements Jsonable
     {
         [$state, $transition] = DB::transaction(function () use ($name, $fail, $reason) {
             $this->reload()->lockForUpdate();
-            if (!$this->can($name)) {
+            if (! $this->can($name)) {
                 if ($this->transitionExists($name)) {
                     Log::warning('Unallowed transition.', [
                         'transition' => $name,
@@ -271,7 +271,7 @@ abstract class State implements Jsonable
                     ]);
                 }
 
-                if (!$fail) {
+                if (! $fail) {
                     return;
                 }
 
@@ -292,7 +292,7 @@ abstract class State implements Jsonable
             return [$state, $transition];
         }, 5);
 
-        if (!$transition) {
+        if (! $transition) {
             return;
         }
 

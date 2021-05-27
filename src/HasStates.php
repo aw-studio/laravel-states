@@ -31,7 +31,7 @@ trait HasStates
      */
     public function initializeHasStates()
     {
-        if (!isset(static::$initialized[static::class])) {
+        if (! isset(static::$initialized[static::class])) {
             static::$initialized[static::class] = true;
 
             foreach ($this->states as $type => $state) {
@@ -143,13 +143,13 @@ trait HasStates
     {
         $relation = $this->getCurrentStateRelationName($type);
 
-        if (!$this->relationLoaded($relation)) {
+        if (! $this->relationLoaded($relation)) {
             $this->loadCurrentState($type);
         }
 
         $latest = $this->getRelation($relation);
 
-        if (!$latest) {
+        if (! $latest) {
             return $this->getStateTypes()[$type]::INITIAL_STATE;
         }
 
@@ -238,7 +238,7 @@ trait HasStates
                     );
                 }
                 foreach ($stateClass::all() as $state) {
-                    if (!$this->watchesObserverMethodState($method->getName(), $type, $state)) {
+                    if (! $this->watchesObserverMethodState($method->getName(), $type, $state)) {
                         continue;
                     }
 
@@ -248,7 +248,7 @@ trait HasStates
                     );
                 }
                 foreach ($stateClass::uniqueTransitions() as $transition) {
-                    if (!$this->watchesObserverMethodStateTransition($method->getName(), $type, $transition)) {
+                    if (! $this->watchesObserverMethodStateTransition($method->getName(), $type, $transition)) {
                         continue;
                     }
 
@@ -272,7 +272,7 @@ trait HasStates
      */
     protected function watchesObserverMethodStateTransition($method, $type, $transition)
     {
-        if (!Str::startsWith($method, Str::camel($type))) {
+        if (! Str::startsWith($method, Str::camel($type))) {
             return false;
         }
 
@@ -292,7 +292,7 @@ trait HasStates
      */
     protected function watchesObserverMethodState($method, $type, $state)
     {
-        if (!Str::startsWith($method, Str::camel($type))) {
+        if (! Str::startsWith($method, Str::camel($type))) {
             return false;
         }
 
@@ -302,7 +302,7 @@ trait HasStates
             return true;
         }
 
-        if (!str_contains($method, 'Or')) {
+        if (! str_contains($method, 'Or')) {
             return false;
         }
 
@@ -574,7 +574,7 @@ trait HasStates
                     });
             });
 
-            if (!in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
+            if (! in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
                 return $query->orWhereDoesntHaveStates($type);
             }
         });
@@ -608,7 +608,7 @@ trait HasStates
                     });
             });
 
-            if (!in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
+            if (! in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
                 return $query->orWhereDoesntHaveStates($type);
             }
         });
@@ -642,7 +642,7 @@ trait HasStates
                     });
             });
 
-            if (!in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
+            if (! in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
                 return $query->orWhereDoesntHaveStates($type);
             }
         });
