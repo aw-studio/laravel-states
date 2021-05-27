@@ -17,11 +17,11 @@ class States extends MorphMany
      */
     public function transition($type, $transition)
     {
-        if (!$type = $this->parent->getStateType($type)) {
+        if (! $type = $this->parent->getStateType($type)) {
             return;
         }
 
-        if (!$this->parent->{$type} instanceof State) {
+        if (! $this->parent->{$type} instanceof State) {
             return;
         }
 
