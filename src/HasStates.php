@@ -6,7 +6,6 @@ use AwStudio\States\Models\State;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\SQLiteConnection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -32,7 +31,7 @@ trait HasStates
      */
     public function initializeHasStates()
     {
-        if (! isset(static::$initialized[static::class])) {
+        if (!isset(static::$initialized[static::class])) {
             static::$initialized[static::class] = true;
 
             foreach ($this->states as $type => $state) {
@@ -49,7 +48,8 @@ trait HasStates
     /**
      * Get current state relation name.
      *
-     * @param  string $type
+     * @param string $type
+     *
      * @return string
      */
     public function getCurrentStateRelationName($type = 'state')
@@ -70,7 +70,8 @@ trait HasStates
     /**
      * Get state type.
      *
-     * @param  string      $type
+     * @param string $type
+     *
      * @return string|null
      */
     public function getStateType($type)
@@ -81,7 +82,8 @@ trait HasStates
     /**
      * Determine wether a state exists.
      *
-     * @param  string $type
+     * @param string $type
+     *
      * @return bool
      */
     public function hasState($type)
@@ -116,8 +118,9 @@ trait HasStates
     /**
      * Update the current state.
      *
-     * @param  string $value
-     * @param  string $type
+     * @param string $value
+     * @param string $type
+     *
      * @return void
      */
     public function setState($value, $type = 'state')
@@ -132,20 +135,21 @@ trait HasStates
     /**
      * Get the current state.
      *
-     * @param  string $type
+     * @param string $type
+     *
      * @return State
      */
     public function getState($type = 'state')
     {
         $relation = $this->getCurrentStateRelationName($type);
 
-        if (! $this->relationLoaded($relation)) {
+        if (!$this->relationLoaded($relation)) {
             $this->loadCurrentState($type);
         }
 
         $latest = $this->getRelation($relation);
 
-        if (! $latest) {
+        if (!$latest) {
             return $this->getStateTypes()[$type]::INITIAL_STATE;
         }
 
@@ -155,7 +159,8 @@ trait HasStates
     /**
      * Determine if a get mutator exists for an attribute.
      *
-     * @param  string $key
+     * @param string $key
+     *
      * @return bool
      */
     public function hasGetMutator($key)
@@ -170,8 +175,9 @@ trait HasStates
     /**
      * Get the value of an attribute using its mutator.
      *
-     * @param  string $key
-     * @param  mixed  $value
+     * @param string $key
+     * @param mixed  $value
+     *
      * @return mixed
      */
     public function mutateAttribute($key, $value)
@@ -186,7 +192,8 @@ trait HasStates
     /**
      * Mutate state attribute.
      *
-     * @param  string $key
+     * @param string $key
+     *
      * @return State
      */
     public function mutatStateAttribute($key)
@@ -205,10 +212,11 @@ trait HasStates
     /**
      * Register a single observer with the model.
      *
-     * @param  object|string $class
-     * @return void
+     * @param object|string $class
      *
      * @throws \RuntimeException
+     *
+     * @return void
      */
     protected function registerObserver($class)
     {
@@ -230,7 +238,7 @@ trait HasStates
                     );
                 }
                 foreach ($stateClass::all() as $state) {
-                    if (! $this->watchesObserverMethodState($method->getName(), $type, $state)) {
+                    if (!$this->watchesObserverMethodState($method->getName(), $type, $state)) {
                         continue;
                     }
 
@@ -240,7 +248,7 @@ trait HasStates
                     );
                 }
                 foreach ($stateClass::uniqueTransitions() as $transition) {
-                    if (! $this->watchesObserverMethodStateTransition($method->getName(), $type, $transition)) {
+                    if (!$this->watchesObserverMethodStateTransition($method->getName(), $type, $transition)) {
                         continue;
                     }
 
@@ -256,14 +264,15 @@ trait HasStates
     /**
      * Determines wether an observer method watches the given state transition.
      *
-     * @param  string $method
-     * @param  string $type
-     * @param  string $transition
+     * @param string $method
+     * @param string $type
+     * @param string $transition
+     *
      * @return bool
      */
     protected function watchesObserverMethodStateTransition($method, $type, $transition)
     {
-        if (! Str::startsWith($method, Str::camel($type))) {
+        if (!Str::startsWith($method, Str::camel($type))) {
             return false;
         }
 
@@ -275,14 +284,15 @@ trait HasStates
     /**
      * Determines wether an observer method watches the given state.
      *
-     * @param  string $method
-     * @param  string $type
-     * @param  string $state
+     * @param string $method
+     * @param string $type
+     * @param string $state
+     *
      * @return bool
      */
     protected function watchesObserverMethodState($method, $type, $state)
     {
-        if (! Str::startsWith($method, Str::camel($type))) {
+        if (!Str::startsWith($method, Str::camel($type))) {
             return false;
         }
 
@@ -292,7 +302,7 @@ trait HasStates
             return true;
         }
 
-        if (! str_contains($method, 'Or')) {
+        if (!str_contains($method, 'Or')) {
             return false;
         }
 
@@ -308,8 +318,9 @@ trait HasStates
     /**
      * Get state event name.
      *
-     * @param  string $type
-     * @param  string $state
+     * @param string $type
+     * @param string $state
+     *
      * @return string
      */
     public function getStateEventName($type, $state)
@@ -320,8 +331,9 @@ trait HasStates
     /**
      * Get state event name.
      *
-     * @param  string $type
-     * @param  string $state
+     * @param string $type
+     * @param string $state
+     *
      * @return string
      */
     public function getStateEventMethod($type, $state)
@@ -332,8 +344,9 @@ trait HasStates
     /**
      * Get transition event name.
      *
-     * @param  string $type
-     * @param  string $transition
+     * @param string $type
+     * @param string $transition
+     *
      * @return string
      */
     public function getTransitionEventName($type, $transition)
@@ -344,8 +357,9 @@ trait HasStates
     /**
      * Get transition event name.
      *
-     * @param  string $type
-     * @param  string $transition
+     * @param string $type
+     * @param string $transition
+     *
      * @return string
      */
     public function getTransitionEventMethod($type, $transition)
@@ -356,8 +370,9 @@ trait HasStates
     /**
      * Fire state events for the given transition.
      *
-     * @param  string     $type
-     * @param  Transition $transition
+     * @param string     $type
+     * @param Transition $transition
+     *
      * @return void
      */
     public function fireStateEventsFor($type, Transition $transition)
@@ -370,7 +385,8 @@ trait HasStates
     /**
      * `whereDoesntHaveStates` query scope.
      *
-     * @param  string $type
+     * @param string $type
+     *
      * @return void
      */
     public function scopeWhereDoesntHaveStates($query, $type = 'state')
@@ -383,7 +399,8 @@ trait HasStates
     /**
      * `whereDoesntHaveStates` query scope.
      *
-     * @param  string $type
+     * @param string $type
+     *
      * @return void
      */
     public function scopeOrWhereDoesntHaveStates($query, $type = 'state')
@@ -396,9 +413,10 @@ trait HasStates
     /**
      * `whereStateWas` query scope.
      *
-     * @param  Builder $query
-     * @param  string  $type
-     * @param  string  $value
+     * @param Builder $query
+     * @param string  $type
+     * @param string  $value
+     *
      * @return void
      */
     public function scopeWhereStateWas($query, $type, $value)
@@ -417,9 +435,10 @@ trait HasStates
     /**
      * `whereNotHaveWasNot` query scope.
      *
-     * @param  Builder $query
-     * @param  string  $type
-     * @param  string  $value
+     * @param Builder $query
+     * @param string  $type
+     * @param string  $value
+     *
      * @return void
      */
     public function scopeWhereNotHaveWasNot($query, $type, $value)
@@ -434,9 +453,10 @@ trait HasStates
     /**
      * `whereStateIs` query scope.
      *
-     * @param  Builder $query
-     * @param  string  $type
-     * @param  string  $value
+     * @param Builder $query
+     * @param string  $type
+     * @param string  $value
+     *
      * @return void
      */
     public function scopeWhereStateIs($query, $type, $value)
@@ -447,7 +467,7 @@ trait HasStates
 
         $query->whereExists(function ($existsQuery) use ($type, $value) {
             $existsQuery
-                ->from(DB::raw((new State)->getTable().' as _s'))
+                ->from(DB::raw((new State())->getTable().' as _s'))
                 ->where('type', $type)
                 ->where('stateful_type', static::class)
                 ->whereColumn('stateful_id', $this->getTable().'.id')
@@ -465,9 +485,10 @@ trait HasStates
     /**
      * `orWhereStateIs` query scope.
      *
-     * @param  Builder $query
-     * @param  string  $type
-     * @param  string  $value
+     * @param Builder $query
+     * @param string  $type
+     * @param string  $value
+     *
      * @return void
      */
     public function scopeOrWhereStateIs($query, $type, $value)
@@ -478,7 +499,7 @@ trait HasStates
 
         $query->orWhereExists(function ($existsQuery) use ($type, $value) {
             $existsQuery
-                ->from(DB::raw((new State)->getTable().' as _s'))
+                ->from(DB::raw((new State())->getTable().' as _s'))
                 ->where('type', $type)
                 ->where('stateful_type', static::class)
                 ->whereColumn('stateful_id', $this->getTable().'.id')
@@ -496,9 +517,10 @@ trait HasStates
     /**
      * `whereStateIn` query scope.
      *
-     * @param  Builder $query
-     * @param  string  $type
-     * @param  array   $value
+     * @param Builder $query
+     * @param string  $type
+     * @param array   $value
+     *
      * @return void
      */
     public function scopeWhereStateIsIn($query, $type, array $value)
@@ -509,7 +531,7 @@ trait HasStates
 
         $query->whereExists(function ($existsQuery) use ($type, $value) {
             $existsQuery
-                ->from(DB::raw((new State)->getTable().' as _s'))
+                ->from(DB::raw((new State())->getTable().' as _s'))
                 ->where('type', $type)
                 ->where('stateful_type', static::class)
                 ->whereColumn('stateful_id', $this->getTable().'.id')
@@ -527,9 +549,10 @@ trait HasStates
     /**
      * `whereStateIsNot` query scope.
      *
-     * @param  Builder $query
-     * @param  string  $type
-     * @param  string  $value
+     * @param Builder $query
+     * @param string  $type
+     * @param string  $value
+     *
      * @return void
      */
     public function scopeWhereStateIsNot($query, $type, $value)
@@ -537,7 +560,7 @@ trait HasStates
         $query->where(function ($query) use ($type, $value) {
             $query->whereExists(function ($existsQuery) use ($type, $value) {
                 $existsQuery
-                    ->from(DB::raw((new State)->getTable().' as _s'))
+                    ->from(DB::raw((new State())->getTable().' as _s'))
                     ->where('type', $type)
                     ->where('stateful_type', static::class)
                     ->whereColumn('stateful_id', $this->getTable().'.id')
@@ -551,7 +574,7 @@ trait HasStates
                     });
             });
 
-            if (! in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
+            if (!in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
                 return $query->orWhereDoesntHaveStates($type);
             }
         });
@@ -560,9 +583,10 @@ trait HasStates
     /**
      * `whereStateIsNot` query scope.
      *
-     * @param  Builder $query
-     * @param  string  $type
-     * @param  array   $value
+     * @param Builder $query
+     * @param string  $type
+     * @param array   $value
+     *
      * @return void
      */
     public function scopeWhereStateIsNotIn($query, $type, array $value)
@@ -570,7 +594,7 @@ trait HasStates
         $query->where(function ($query) use ($type, $value) {
             $query->whereExists(function ($existsQuery) use ($type, $value) {
                 $existsQuery
-                    ->from(DB::raw((new State)->getTable().' as _s'))
+                    ->from(DB::raw((new State())->getTable().' as _s'))
                     ->where('type', $type)
                     ->where('stateful_type', static::class)
                     ->whereColumn('stateful_id', $this->getTable().'.id')
@@ -584,7 +608,7 @@ trait HasStates
                     });
             });
 
-            if (! in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
+            if (!in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
                 return $query->orWhereDoesntHaveStates($type);
             }
         });
@@ -593,9 +617,10 @@ trait HasStates
     /**
      * `orWhereStateIsNot` query scope.
      *
-     * @param  Builder      $query
-     * @param  string       $type
-     * @param  string|array $value
+     * @param Builder      $query
+     * @param string       $type
+     * @param string|array $value
+     *
      * @return void
      */
     public function scopeOrWhereStateIsNot($query, $type, $value)
@@ -603,7 +628,7 @@ trait HasStates
         $query->orWhere(function ($query) use ($type, $value) {
             $query->whereExists(function ($existsQuery) use ($type, $value) {
                 $existsQuery
-                    ->from(DB::raw((new State)->getTable().' as _s'))
+                    ->from(DB::raw((new State())->getTable().' as _s'))
                     ->where('type', $type)
                     ->where('stateful_type', static::class)
                     ->whereColumn('stateful_id', $this->getTable().'.id')
@@ -617,7 +642,7 @@ trait HasStates
                     });
             });
 
-            if (! in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
+            if (!in_array($this->getStateType($type)::INITIAL_STATE, Arr::wrap($value))) {
                 return $query->orWhereDoesntHaveStates($type);
             }
         });
@@ -626,9 +651,10 @@ trait HasStates
     /**
      * `addCurrentStateSelect` query scope.
      *
-     * @param  Builder $query
-     * @param  string  $type
-     * @param  string  $select
+     * @param Builder $query
+     * @param string  $type
+     * @param string  $select
+     *
      * @return void
      */
     public function scopeAddCurrentStateSelect($query, $type = 'state', $select = 'state', Closure $closure = null)
@@ -645,8 +671,9 @@ trait HasStates
     /**
      * `withCurrentState` query scope.
      *
-     * @param  Builder $query
-     * @param  string  $type
+     * @param Builder $query
+     * @param string  $type
+     *
      * @return void
      */
     public function scopeWithCurrentState($query, $type = 'state')
@@ -658,7 +685,8 @@ trait HasStates
     /**
      * Load state relation of the given type.
      *
-     * @param  string $type
+     * @param string $type
+     *
      * @return $this
      */
     public function loadCurrentState($type = 'state')
@@ -679,7 +707,8 @@ trait HasStates
     /**
      * Reload current state relation of the given type.
      *
-     * @param  string $type
+     * @param string $type
+     *
      * @return $this
      */
     public function reloadState($type = 'state')

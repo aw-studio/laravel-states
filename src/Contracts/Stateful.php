@@ -10,8 +10,9 @@ interface Stateful
     /**
      * Update the current state.
      *
-     * @param  string $value
-     * @param  string $type
+     * @param string $value
+     * @param string $type
+     *
      * @return void
      */
     public function setState($value, $type = null);
@@ -19,7 +20,8 @@ interface Stateful
     /**
      * Get the current state.
      *
-     * @param  string $type
+     * @param string $type
+     *
      * @return State
      */
     public function getState($type = null);

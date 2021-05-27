@@ -24,6 +24,7 @@ abstract class State implements Jsonable
     /**
      * Stateful instance.
      *dd($item->ticket_state->current());.
+     *
      * @var Stateful|Model
      */
     protected $stateful;
@@ -52,7 +53,7 @@ abstract class State implements Jsonable
         $reflector = new ReflectionClass(static::class);
 
         return collect($reflector->getConstants())
-            ->filter(fn ($value, $key) => ! in_array($key, [
+            ->filter(fn ($value, $key) => !in_array($key, [
                 'INITIAL_STATE', 'FINAL_STATES',
             ]))
             ->values()
@@ -62,7 +63,8 @@ abstract class State implements Jsonable
     /**
      * Get states from where the given transition can be executed.
      *
-     * @param  string $transition
+     * @param string $transition
+     *
      * @return array
      */
     public static function whereCan($transition)
@@ -79,8 +81,9 @@ abstract class State implements Jsonable
      * Determines wether the given transition can be executed for the given
      * state.
      *
-     * @param  string $state
-     * @param  string $transition
+     * @param string $state
+     * @param string $transition
+     *
      * @return bool
      */
     public static function canTransitionFrom($state, $transition)
@@ -102,7 +105,7 @@ abstract class State implements Jsonable
         $transitions = [];
 
         foreach (static::getTransitions() as $transition) {
-            if (! in_array($transition->name, $transitions)) {
+            if (!in_array($transition->name, $transitions)) {
                 $transitions[] = $transition->name;
             }
         }
@@ -113,12 +116,13 @@ abstract class State implements Jsonable
     /**
      * Allow transition.
      *
-     * @param  string     $transition
+     * @param string $transition
+     *
      * @return Transition
      */
     public static function set($transition)
     {
-        if (! array_key_exists(static::class, static::$transitions)) {
+        if (!array_key_exists(static::class, static::$transitions)) {
             static::$transitions[static::class] = [];
         }
 
@@ -136,7 +140,7 @@ abstract class State implements Jsonable
      */
     public static function getTransitions()
     {
-        if (! array_key_exists(static::class, static::$transitions)) {
+        if (!array_key_exists(static::class, static::$transitions)) {
             static::config();
         }
 
@@ -146,8 +150,9 @@ abstract class State implements Jsonable
     /**
      * Create new State instance.
      *
-     * @param  Stateful $stateful
-     * @param  string   $type
+     * @param Stateful $stateful
+     * @param string   $type
+     *
      * @return void
      */
     public function __construct(Stateful $stateful, $type)
@@ -183,7 +188,8 @@ abstract class State implements Jsonable
     /**
      * Determines if a transition can be executed.
      *
-     * @param  string $transition
+     * @param string $transition
+     *
      * @return bool
      */
     public function can($transition)
@@ -194,7 +200,8 @@ abstract class State implements Jsonable
     /**
      * Get current transition.
      *
-     * @param  string          $transition
+     * @param string $transition
+     *
      * @return Transition|void
      */
     public function getCurrentTransition($transition)
@@ -209,7 +216,8 @@ abstract class State implements Jsonable
     /**
      * Determines wether a transition exists.
      *
-     * @param  string $transition
+     * @param string $transition
+     *
      * @return bool
      */
     public function transitionExists($transition)
@@ -242,18 +250,19 @@ abstract class State implements Jsonable
     /**
      * Execute transition.
      *
-     * @param  string $transition
-     * @param  string $fail
-     * @param  string $reason
-     * @return void
+     * @param string $transition
+     * @param string $fail
+     * @param string $reason
      *
      * @throws TransitionException
+     *
+     * @return void
      */
     public function transition($name, $fail = true, $reason = null)
     {
         [$state, $transition] = DB::transaction(function () use ($name, $fail, $reason) {
             $this->reload()->lockForUpdate();
-            if (! $this->can($name)) {
+            if (!$this->can($name)) {
                 if ($this->transitionExists($name)) {
                     Log::warning('Unallowed transition.', [
                         'transition' => $name,
@@ -262,7 +271,7 @@ abstract class State implements Jsonable
                     ]);
                 }
 
-                if (! $fail) {
+                if (!$fail) {
                     return;
                 }
 
@@ -283,7 +292,7 @@ abstract class State implements Jsonable
             return [$state, $transition];
         }, 5);
 
-        if (! $transition) {
+        if (!$transition) {
             return;
         }
 
@@ -329,7 +338,8 @@ abstract class State implements Jsonable
     /**
      * Determine if the current state is the given state.
      *
-     * @param  string|array $state
+     * @param string|array $state
+     *
      * @return bool
      */
     public function is($state)
@@ -340,7 +350,8 @@ abstract class State implements Jsonable
     /**
      * Determine if the current state is any of the given states.
      *
-     * @param  array $states
+     * @param array $states
+     *
      * @return bool
      */
     public function isAnyOf($states)
@@ -373,7 +384,8 @@ abstract class State implements Jsonable
     /**
      * Convert the object to its JSON representation.
      *
-     * @param  int    $options
+     * @param int $options
+     *
      * @return string
      */
     public function toJson($options = 0)
