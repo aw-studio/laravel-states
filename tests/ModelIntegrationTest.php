@@ -35,7 +35,7 @@ class ModelIntegrationTest extends TestCase
     /** @test */
     public function it_has_initial_state()
     {
-        $booking = new Booking;
+        $booking = new Booking();
         $this->assertNotNull($booking->state);
         $this->assertInstanceOf(BookingState::class, $booking->state);
         $this->assertSame(BookingState::INITIAL_STATE, $booking->state->current());
@@ -150,7 +150,7 @@ class ModelIntegrationTest extends TestCase
     /** @test */
     public function test_getCurrentStateRelationName_method()
     {
-        $booking = new Booking;
+        $booking = new Booking();
         $this->assertSame('current_state', $booking->getCurrentStateRelationName());
         $this->assertSame('current_state', $booking->getCurrentStateRelationName('state'));
         $this->assertSame('current_payment_state', $booking->getCurrentStateRelationName('payment_state'));
