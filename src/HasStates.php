@@ -272,12 +272,14 @@ trait HasStates
      */
     protected function watchesObserverMethodStateTransition($method, $type, $transition)
     {
-        if (! Str::startsWith($method, Str::camel($type))) {
+        $start = Str::camel($type).'Transition';
+
+        if (! Str::startsWith($method, $start)) {
             return false;
         }
-
-        $following = str_replace(Str::camel($type), '', $method);
-
+        
+        $following = str_replace($start, '', $method);
+        
         return $following == ucfirst(Str::camel($transition));
     }
 
