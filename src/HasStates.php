@@ -277,9 +277,9 @@ trait HasStates
         if (! Str::startsWith($method, $start)) {
             return false;
         }
-        
+
         $following = str_replace($start, '', $method);
-        
+
         return $following == ucfirst(Str::camel($transition));
     }
 
