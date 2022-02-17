@@ -28,8 +28,7 @@ class Transition
     /**
      * Create new Transition instance.
      *
-     * @param string $transition
-     *
+     * @param  string  $transition
      * @return void
      */
     public function __construct($transition)
@@ -40,8 +39,7 @@ class Transition
     /**
      * Set from state.
      *
-     * @param string $state
-     *
+     * @param  string  $state
      * @return $this
      */
     public function from($state)
@@ -54,8 +52,7 @@ class Transition
     /**
      * Set to state.
      *
-     * @param string $state
-     *
+     * @param  string  $state
      * @return $this
      */
     public function to($state)

@@ -63,8 +63,7 @@ abstract class State implements Jsonable
     /**
      * Get states from where the given transition can be executed.
      *
-     * @param string $transition
-     *
+     * @param  string  $transition
      * @return array
      */
     public static function whereCan($transition)
@@ -81,9 +80,8 @@ abstract class State implements Jsonable
      * Determines wether the given transition can be executed for the given
      * state.
      *
-     * @param string $state
-     * @param string $transition
-     *
+     * @param  string  $state
+     * @param  string  $transition
      * @return bool
      */
     public static function canTransitionFrom($state, $transition)
@@ -116,8 +114,7 @@ abstract class State implements Jsonable
     /**
      * Allow transition.
      *
-     * @param string $transition
-     *
+     * @param  string  $transition
      * @return Transition
      */
     public static function set($transition)
@@ -150,9 +147,8 @@ abstract class State implements Jsonable
     /**
      * Create new State instance.
      *
-     * @param Stateful $stateful
-     * @param string   $type
-     *
+     * @param  Stateful  $stateful
+     * @param  string  $type
      * @return void
      */
     public function __construct(Stateful $stateful, $type)
@@ -188,8 +184,7 @@ abstract class State implements Jsonable
     /**
      * Determines if a transition can be executed.
      *
-     * @param string $transition
-     *
+     * @param  string  $transition
      * @return bool
      */
     public function can($transition)
@@ -200,8 +195,7 @@ abstract class State implements Jsonable
     /**
      * Get current transition.
      *
-     * @param string $transition
-     *
+     * @param  string  $transition
      * @return Transition|void
      */
     public function getCurrentTransition($transition)
@@ -216,8 +210,7 @@ abstract class State implements Jsonable
     /**
      * Determines wether a transition exists.
      *
-     * @param string $transition
-     *
+     * @param  string  $transition
      * @return bool
      */
     public function transitionExists($transition)
@@ -250,13 +243,12 @@ abstract class State implements Jsonable
     /**
      * Execute transition.
      *
-     * @param string $transition
-     * @param string $fail
-     * @param string $reason
+     * @param  string  $transition
+     * @param  string  $fail
+     * @param  string  $reason
+     * @return void
      *
      * @throws TransitionException
-     *
-     * @return void
      */
     public function transition($name, $fail = true, $reason = null)
     {
@@ -338,8 +330,7 @@ abstract class State implements Jsonable
     /**
      * Determine if the current state is the given state.
      *
-     * @param string|array $state
-     *
+     * @param  string|array  $state
      * @return bool
      */
     public function is($state)
@@ -350,8 +341,7 @@ abstract class State implements Jsonable
     /**
      * Determine if the current state is any of the given states.
      *
-     * @param array $states
-     *
+     * @param  array  $states
      * @return bool
      */
     public function isAnyOf($states)
@@ -384,8 +374,7 @@ abstract class State implements Jsonable
     /**
      * Convert the object to its JSON representation.
      *
-     * @param int $options
-     *
+     * @param  int  $options
      * @return string
      */
     public function toJson($options = 0)

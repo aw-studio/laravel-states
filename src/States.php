@@ -10,9 +10,8 @@ class States extends MorphMany
     /**
      * Make transition.
      *
-     * @param string $type
-     * @param string $transition
-     *
+     * @param  string  $type
+     * @param  string  $transition
      * @return StateModel
      */
     public function transition($type, $transition)
@@ -31,10 +30,9 @@ class States extends MorphMany
     /**
      * Make state from transition.
      *
-     * @param string      $type
-     * @param Transition  $transition
-     * @param string|null $reason
-     *
+     * @param  string  $type
+     * @param  Transition  $transition
+     * @param  string|null  $reason
      * @return StateModel
      */
     public function makeFromTransition($type, Transition $transition, $reason = null)
