@@ -231,6 +231,12 @@ abstract class State implements Jsonable
      */
     public function lockForUpdate()
     {
+        $dbConnection = $this->stateful->states()->getQuery()->getQuery()->getConnection();
+
+        if ($dbConnection instanceof \Illuminate\Database\PostgresConnection) {
+            return $this;
+        }
+
         $this->stateful
             ->states()
             ->where('type', $this->type)
