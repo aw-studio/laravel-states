@@ -236,7 +236,7 @@ abstract class State implements Jsonable
         if ($dbConnection instanceof \Illuminate\Database\PostgresConnection) {
             return $this;
         }
-        
+
         $this->stateful
             ->states()
             ->where('type', $this->type)
