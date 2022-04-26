@@ -213,7 +213,7 @@ trait HasStates
     protected function registerObserver($class)
     {
         parent::registerObserver($class);
-        $className = static::resolveObserverClassName($class);
+        $className = $this->resolveObserverClassName($class);
         $reflector = new ReflectionClass($className);
 
         foreach ($reflector->getMethods() as $method) {
@@ -261,7 +261,7 @@ trait HasStates
      *
      * @throws \InvalidArgumentException
      */
-    protected static function resolveObserverClassName($class)
+    protected function resolveObserverClassName($class)
     {
         if (is_object($class)) {
             return get_class($class);
