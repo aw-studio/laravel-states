@@ -450,13 +450,13 @@ trait HasStates
             $existsQuery
                 ->from(DB::raw((new State())->getTable().' as _s'))
                 ->where('type', $type)
-                ->where('stateful_type', static::class)
+                ->where('stateful_type', $this->getMorphClass())
                 ->whereColumn('stateful_id', $this->getTable().'.id')
                 ->where('state', $value)
                 ->whereNotExists(function ($notExistsQuery) use ($type) {
                     $notExistsQuery->from('states')
                         ->where('type', $type)
-                        ->where('stateful_type', static::class)
+                        ->where('stateful_type', $this->getMorphClass())
                         ->whereColumn('stateful_id', $this->getTable().'.id')
                         ->whereColumn('id', '>', '_s.id');
                 });
@@ -481,13 +481,13 @@ trait HasStates
             $existsQuery
                 ->from(DB::raw((new State())->getTable().' as _s'))
                 ->where('type', $type)
-                ->where('stateful_type', static::class)
+                ->where('stateful_type', $this->getMorphClass())
                 ->whereColumn('stateful_id', $this->getTable().'.id')
                 ->where('state', $value)
                 ->whereNotExists(function ($notExistsQuery) use ($type) {
                     $notExistsQuery->from('states')
                         ->where('type', $type)
-                        ->where('stateful_type', static::class)
+                        ->where('stateful_type', $this->getMorphClass())
                         ->whereColumn('stateful_id', $this->getTable().'.id')
                         ->whereColumn('id', '>', '_s.id');
                 });
@@ -512,13 +512,13 @@ trait HasStates
             $existsQuery
                 ->from(DB::raw((new State())->getTable().' as _s'))
                 ->where('type', $type)
-                ->where('stateful_type', static::class)
+                ->where('stateful_type', $this->getMorphClass())
                 ->whereColumn('stateful_id', $this->getTable().'.id')
                 ->whereIn('state', $value)
                 ->whereNotExists(function ($notExistsQuery) use ($type) {
                     $notExistsQuery->from('states')
                         ->where('type', $type)
-                        ->where('stateful_type', static::class)
+                        ->where('stateful_type', $this->getMorphClass())
                         ->whereColumn('stateful_id', $this->getTable().'.id')
                         ->whereColumn('id', '>', '_s.id');
                 });
@@ -540,13 +540,13 @@ trait HasStates
                 $existsQuery
                     ->from(DB::raw((new State())->getTable().' as _s'))
                     ->where('type', $type)
-                    ->where('stateful_type', static::class)
+                    ->where('stateful_type', $this->getMorphClass())
                     ->whereColumn('stateful_id', $this->getTable().'.id')
                     ->where('state', '!=', $value)
                     ->whereNotExists(function ($notExistsQuery) use ($type) {
                         $notExistsQuery->from('states')
                             ->where('type', $type)
-                            ->where('stateful_type', static::class)
+                            ->where('stateful_type', $this->getMorphClass())
                             ->whereColumn('stateful_id', $this->getTable().'.id')
                             ->whereColumn('id', '>', '_s.id');
                     });
@@ -573,13 +573,13 @@ trait HasStates
                 $existsQuery
                     ->from(DB::raw((new State())->getTable().' as _s'))
                     ->where('type', $type)
-                    ->where('stateful_type', static::class)
+                    ->where('stateful_type', $this->getMorphClass())
                     ->whereColumn('stateful_id', $this->getTable().'.id')
                     ->whereNotIn('state', $value)
                     ->whereNotExists(function ($notExistsQuery) use ($type) {
                         $notExistsQuery->from('states')
                             ->where('type', $type)
-                            ->where('stateful_type', static::class)
+                            ->where('stateful_type', $this->getMorphClass())
                             ->whereColumn('stateful_id', $this->getTable().'.id')
                             ->whereColumn('id', '>', '_s.id');
                     });
@@ -606,13 +606,13 @@ trait HasStates
                 $existsQuery
                     ->from(DB::raw((new State())->getTable().' as _s'))
                     ->where('type', $type)
-                    ->where('stateful_type', static::class)
+                    ->where('stateful_type', $this->getMorphClass())
                     ->whereColumn('stateful_id', $this->getTable().'.id')
                     ->where('state', '!=', $value)
                     ->whereNotExists(function ($notExistsQuery) use ($type) {
                         $notExistsQuery->from('states')
                             ->where('type', $type)
-                            ->where('stateful_type', static::class)
+                            ->where('stateful_type', $this->getMorphClass())
                             ->whereColumn('stateful_id', $this->getTable().'.id')
                             ->whereColumn('id', '>', '_s.id');
                     });
@@ -636,7 +636,7 @@ trait HasStates
     {
         $query->addSelect(["current_{$type}_{$select}" => State::select($select)
             ->where('type', $type)
-            ->where('stateful_type', static::class)
+            ->where('stateful_type', $this->getMorphClass())
             ->whereColumn('stateful_id', $this->getTable().'.id')
             ->orderByDesc('id')
             ->take(1),
