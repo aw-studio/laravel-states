@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use ReflectionClass;
 
 trait HasStates
@@ -212,7 +213,7 @@ trait HasStates
     protected function registerObserver($class)
     {
         parent::registerObserver($class);
-        $className = parent::resolveObserverClassName($class);
+        $className = $this->resolveObserverClassName($class);
         $reflector = new ReflectionClass($className);
 
         foreach ($reflector->getMethods() as $method) {
@@ -250,6 +251,27 @@ trait HasStates
                 }
             }
         }
+    }
+
+    /**
+     * Resolve the observer's class name from an object or string.
+     *
+     * @param  object|string  $class
+     * @return string
+     *
+     * @throws \InvalidArgumentException
+     */
+    protected function resolveObserverClassName($class)
+    {
+        if (is_object($class)) {
+            return get_class($class);
+        }
+
+        if (class_exists($class)) {
+            return $class;
+        }
+
+        throw new InvalidArgumentException('Unable to find observer: '.$class);
     }
 
     /**
