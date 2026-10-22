@@ -8,26 +8,6 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 class States extends MorphMany
 {
     /**
-     * Make transition.
-     *
-     * @param  string  $type
-     * @param  string  $transition
-     * @return StateModel
-     */
-    public function transition($type, $transition)
-    {
-        if (! $type = $this->parent->getStateType($type)) {
-            return;
-        }
-
-        if (! $this->parent->{$type} instanceof State) {
-            return;
-        }
-
-        return $this->parent->{$type}->executeTransition($transition);
-    }
-
-    /**
      * Make state from transition.
      *
      * @param  string  $type
