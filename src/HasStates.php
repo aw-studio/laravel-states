@@ -460,21 +460,6 @@ trait HasStates
     }
 
     /**
-     * `whereNotHaveWasNot` query scope.
-     *
-     * @deprecated Use `whereStateWasNot` instead.
-     *
-     * @param  Builder  $query
-     * @param  string  $type
-     * @param  string  $value
-     * @return void
-     */
-    public function scopeWhereNotHaveWasNot($query, $type, $value)
-    {
-        $this->scopeWhereStateWasNot($query, $type, $value);
-    }
-
-    /**
      * `whereStateIs` query scope.
      *
      * @param  Builder  $query

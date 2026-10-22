@@ -30,6 +30,8 @@ This way you also know when the change to active has taken place. Also your app 
 
 ## Setup
 
+Requires PHP 8.2+ and Laravel 11, 12 or 13. For Laravel 8–10, use version `^1.0`.
+
 1. Install the package via composer:
 
 ```shell
@@ -272,3 +274,9 @@ class BookingObserver
 BookingState::whereCan(BookingStateTransition::PAYMENT_PAID); // Gets states where from where the given transition can be executed.
 BookingState::canTransitionFrom('pending', 'cancel'); // Determines if the transition can be executed for the given state.
 ```
+
+## Upgrading From 1.x To 2.0
+
+- PHP 8.2+ and Laravel 11+ are now required.
+- The `whereNotHaveWasNot` scope has been removed. Use `whereStateWasNot` instead.
+- `whereStateWasNot($type, $initialState)` now returns no models, since every model has been in its initial state.

@@ -12,17 +12,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 composer install
 composer test                                             # vendor/bin/phpunit
 vendor/bin/phpunit tests/ModelIntegrationTest.php         # single file
-vendor/bin/phpunit --filter it_executes_transition        # single test
+vendor/bin/phpunit --filter test_it_executes_transition   # single test
 ```
 
-Tests run on Orchestra Testbench against in-memory SQLite (`tests/TestCase.php`). Integration tests load the package migration and create their own fixture tables in `setUp()`; fixture models/state classes (`Booking`, `BookingState`, …) are declared at the bottom of the test files. Tests use the `/** @test */` + `it_…` naming style.
+Tests run on Orchestra Testbench against in-memory SQLite (`tests/TestCase.php`). Integration tests create their own fixture tables in `setUp()`; fixture models/state classes (`Booking`, `BookingState`, …) are declared at the bottom of the test files.
 
 Code style is enforced by StyleCI (Laravel preset), not a local linter.
 
-Version support: Laravel 8–13 on PHP 7.4–8.5, with PHPUnit 9–13 / Testbench 6–11 as dev deps. CI (`.github/workflows/tests.yml`) runs each Laravel major on its lowest and highest supported PHP. Because of that range:
-- `src/` must stay PHP 7.4-compatible (no constructor promotion, enums, `readonly`, union types, etc.), but must also avoid PHP 8.4+ deprecations (e.g. use `?Type $x = null`, never implicit nullable).
-- Tests use `test_` method prefixes (not `@test` doc-comments or attributes), and `phpunit.xml` stays minimal so it validates on PHPUnit 9 through 13.
-- Package migrations are loaded in `defineDatabaseMigrations()`, not `setUp()`, otherwise older Testbench versions never create the `states` table.
+Version support (2.x): Laravel 11–13 on PHP 8.2+, with PHPUnit 10.5–13 / Testbench 9–11 as dev deps. CI (`.github/workflows/tests.yml`) runs each Laravel major on its lowest and highest supported PHP. Laravel 8–10 users stay on 1.x.
+- Avoid PHP 8.4+ deprecations in `src/` (e.g. use `?Type $x = null`, never implicit nullable).
+- Tests use `test_` method prefixes (not `@test` doc-comments), and `phpunit.xml` stays minimal so it validates across PHPUnit 10.5–13.
+- Package migrations are loaded in `defineDatabaseMigrations()`, not `setUp()`.
 
 ## Architecture
 
