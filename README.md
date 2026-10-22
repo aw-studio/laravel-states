@@ -64,10 +64,10 @@ class BookingState extends State
 }
 ```
 
-2. Create the transitions class:
+2. Create the transitions class (a plain class holding the transition names):
 
 ```php
-class BookingStateTransitions extends State
+class BookingStateTransition
 {
     const PAYMENT_PAID = 'payment_paid';
     const PAYMENT_FAILED = 'payment_failed';
@@ -220,8 +220,15 @@ Filter models that have or dont have a current state:
 ```php
 Booking::whereStateIs('payment_state', PaymentState::PAID);
 Booking::orWhereStateIs('payment_state', PaymentState::PAID);
+Booking::whereStateIsIn('payment_state', [PaymentState::PAID, PaymentState::REFUNDED]);
 Booking::whereStateIsNot('payment_state', PaymentState::PAID);
 Booking::orWhereStateIsNot('payment_state', PaymentState::PAID);
+Booking::whereStateIsNotIn('payment_state', [PaymentState::PAID, PaymentState::REFUNDED]);
+```
+
+Filter models that have or have never been in a state:
+
+```php
 Booking::whereStateWas('payment_state', PaymentState::PAID);
 Booking::whereStateWasNot('payment_state', PaymentState::PAID);
 ```
