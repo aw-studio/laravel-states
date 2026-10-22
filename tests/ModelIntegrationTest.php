@@ -15,11 +15,14 @@ class ModelIntegrationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function defineDatabaseMigrations()
+    {
+        $this->loadMigrationsFrom(__DIR__.'/../migrations');
+    }
+
     public function setUp(): void
     {
         parent::setUp();
-
-        $this->loadMigrationsFrom(__DIR__.'/../migrations');
 
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
@@ -32,8 +35,7 @@ class ModelIntegrationTest extends TestCase
         parent::tearDown();
     }
 
-    /** @test */
-    public function it_has_initial_state()
+    public function test_it_has_initial_state()
     {
         $booking = new Booking();
         $this->assertNotNull($booking->state);
@@ -41,8 +43,7 @@ class ModelIntegrationTest extends TestCase
         $this->assertSame(BookingState::INITIAL_STATE, $booking->state->current());
     }
 
-    /** @test */
-    public function it_executes_transition()
+    public function test_it_executes_transition()
     {
         $booking = Booking::create();
         $booking->state->transition(BookingStateTransition::PAYMENT_PAID);
@@ -53,15 +54,13 @@ class ModelIntegrationTest extends TestCase
         $this->assertSame(BookingState::FAILED, $booking->state->current());
     }
 
-    /** @test */
-    public function it_fails_for_invalid_transition()
+    public function test_it_fails_for_invalid_transition()
     {
         $this->expectException(TransitionException::class);
         $booking = Booking::create();
         $booking->state->transition('foo');
     }
 
-    /** @test */
     public function test_state_getter()
     {
         $booking = Booking::create();
@@ -70,7 +69,6 @@ class ModelIntegrationTest extends TestCase
         $this->assertSame(BookingState::SUCCESSFULL, (string) $booking->state);
     }
 
-    /** @test */
     public function test_state_is_method()
     {
         $booking = Booking::create();
@@ -80,7 +78,6 @@ class ModelIntegrationTest extends TestCase
         $this->assertFalse($booking->state->is(BookingState::FAILED));
     }
 
-    /** @test */
     public function test_state_is_any_of_method()
     {
         $booking = Booking::create();
@@ -94,7 +91,6 @@ class ModelIntegrationTest extends TestCase
         ]));
     }
 
-    /** @test */
     public function test_state_was_method()
     {
         $booking = Booking::create();
@@ -103,7 +99,6 @@ class ModelIntegrationTest extends TestCase
         $this->assertFalse($booking->state->was(BookingState::FAILED));
     }
 
-    /** @test */
     public function test_state_was_method_for_initial_state()
     {
         $booking = Booking::create();
@@ -112,7 +107,6 @@ class ModelIntegrationTest extends TestCase
         $this->assertFalse($booking->state->was(BookingState::FAILED));
     }
 
-    /** @test */
     public function test_withCurrentState_method()
     {
         $booking = Booking::create();
@@ -129,7 +123,6 @@ class ModelIntegrationTest extends TestCase
         $this->assertSame('foo', $booking->getRelation('current_state')->state);
     }
 
-    /** @test */
     public function test_loadCurrentState_method()
     {
         $booking = Booking::create();
@@ -147,7 +140,6 @@ class ModelIntegrationTest extends TestCase
         $this->assertSame('foo', $booking->getRelation('current_state')->state);
     }
 
-    /** @test */
     public function test_getCurrentStateRelationName_method()
     {
         $booking = new Booking();
@@ -156,7 +148,28 @@ class ModelIntegrationTest extends TestCase
         $this->assertSame('current_payment_state', $booking->getCurrentStateRelationName('payment_state'));
     }
 
-    /** @test */
+    public function test_whereStateWas_query_scope()
+    {
+        $booking1 = Booking::create();
+        $booking2 = Booking::create();
+        $booking1->state->transition(BookingStateTransition::PAYMENT_PAID);
+
+        $this->assertSame(2, Booking::whereStateWas('state', BookingState::INITIAL_STATE)->count());
+        $this->assertSame(0, Booking::whereStateWas('state', BookingState::FAILED)->count());
+        $this->assertSame($booking1->id, Booking::whereStateWas('state', BookingState::SUCCESSFULL)->sole()->id);
+    }
+
+    public function test_whereStateWasNot_query_scope()
+    {
+        $booking1 = Booking::create();
+        $booking2 = Booking::create();
+        $booking1->state->transition(BookingStateTransition::PAYMENT_PAID);
+
+        $this->assertSame(0, Booking::whereStateWasNot('state', BookingState::INITIAL_STATE)->count());
+        $this->assertSame(2, Booking::whereStateWasNot('state', BookingState::FAILED)->count());
+        $this->assertSame($booking2->id, Booking::whereStateWasNot('state', BookingState::SUCCESSFULL)->sole()->id);
+    }
+
     public function test_whereStateIs_query_scope()
     {
         $booking1 = Booking::create();
@@ -170,7 +183,6 @@ class ModelIntegrationTest extends TestCase
         $this->assertSame($booking1->id, Booking::whereStateIs('state', BookingState::SUCCESSFULL)->first()->id);
     }
 
-    /** @test */
     public function test_OrWhereStateIs_query_scope()
     {
         $booking1 = Booking::create();
@@ -181,7 +193,6 @@ class ModelIntegrationTest extends TestCase
         $this->assertSame(2, Booking::where('id', $booking2->id)->OrWhereStateIs('state', BookingState::SUCCESSFULL)->count());
     }
 
-    /** @test */
     public function test_whereStateIsNot_query_scope()
     {
         $booking1 = Booking::create();
@@ -204,7 +215,6 @@ class ModelIntegrationTest extends TestCase
         $this->assertSame($booking1->id, Booking::whereStateIsNot('state', BookingState::INITIAL_STATE)->first()->id);
     }
 
-    /** @test */
     public function test_orWhereStateIsNot_query_scope()
     {
         $booking1 = Booking::create();

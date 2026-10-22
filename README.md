@@ -30,6 +30,8 @@ This way you also know when the change to active has taken place. Also your app 
 
 ## Setup
 
+Requires PHP 8.2+ and Laravel 11, 12 or 13. For Laravel 8–10, use version `^1.0`.
+
 1. Install the package via composer:
 
 ```shell
@@ -64,10 +66,10 @@ class BookingState extends State
 }
 ```
 
-2. Create the transitions class:
+2. Create the transitions class (a plain class holding the transition names):
 
 ```php
-class BookingStateTransitions extends State
+class BookingStateTransition
 {
     const PAYMENT_PAID = 'payment_paid';
     const PAYMENT_FAILED = 'payment_failed';
@@ -220,8 +222,15 @@ Filter models that have or dont have a current state:
 ```php
 Booking::whereStateIs('payment_state', PaymentState::PAID);
 Booking::orWhereStateIs('payment_state', PaymentState::PAID);
+Booking::whereStateIsIn('payment_state', [PaymentState::PAID, PaymentState::REFUNDED]);
 Booking::whereStateIsNot('payment_state', PaymentState::PAID);
 Booking::orWhereStateIsNot('payment_state', PaymentState::PAID);
+Booking::whereStateIsNotIn('payment_state', [PaymentState::PAID, PaymentState::REFUNDED]);
+```
+
+Filter models that have or have never been in a state:
+
+```php
 Booking::whereStateWas('payment_state', PaymentState::PAID);
 Booking::whereStateWasNot('payment_state', PaymentState::PAID);
 ```
@@ -265,3 +274,9 @@ class BookingObserver
 BookingState::whereCan(BookingStateTransition::PAYMENT_PAID); // Gets states where from where the given transition can be executed.
 BookingState::canTransitionFrom('pending', 'cancel'); // Determines if the transition can be executed for the given state.
 ```
+
+## Upgrading From 1.x To 2.0
+
+- PHP 8.2+ and Laravel 11+ are now required.
+- The `whereNotHaveWasNot` scope has been removed. Use `whereStateWasNot` instead.
+- `whereStateWasNot($type, $initialState)` now returns no models, since every model has been in its initial state.

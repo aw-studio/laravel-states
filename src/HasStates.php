@@ -438,15 +438,20 @@ trait HasStates
     }
 
     /**
-     * `whereNotHaveWasNot` query scope.
+     * `whereStateWasNot` query scope.
      *
      * @param  Builder  $query
      * @param  string  $type
      * @param  string  $value
      * @return void
      */
-    public function scopeWhereNotHaveWasNot($query, $type, $value)
+    public function scopeWhereStateWasNot($query, $type, $value)
     {
+        // Every model has been in the initial state.
+        if ($this->getStateType($type)::INITIAL_STATE == $value) {
+            return $query->whereRaw('0 = 1');
+        }
+
         $query->whereDoesntHave('states', function ($statesQuery) use ($type, $value) {
             $statesQuery
                 ->where('type', $type)
@@ -476,7 +481,7 @@ trait HasStates
                 ->whereColumn('stateful_id', $this->getTable().'.id')
                 ->where('state', $value)
                 ->whereNotExists(function ($notExistsQuery) use ($type) {
-                    $notExistsQuery->from('states')
+                    $notExistsQuery->from((new State())->getTable())
                         ->where('type', $type)
                         ->where('stateful_type', $this->getMorphClass())
                         ->whereColumn('stateful_id', $this->getTable().'.id')
@@ -507,7 +512,7 @@ trait HasStates
                 ->whereColumn('stateful_id', $this->getTable().'.id')
                 ->where('state', $value)
                 ->whereNotExists(function ($notExistsQuery) use ($type) {
-                    $notExistsQuery->from('states')
+                    $notExistsQuery->from((new State())->getTable())
                         ->where('type', $type)
                         ->where('stateful_type', $this->getMorphClass())
                         ->whereColumn('stateful_id', $this->getTable().'.id')
@@ -538,7 +543,7 @@ trait HasStates
                 ->whereColumn('stateful_id', $this->getTable().'.id')
                 ->whereIn('state', $value)
                 ->whereNotExists(function ($notExistsQuery) use ($type) {
-                    $notExistsQuery->from('states')
+                    $notExistsQuery->from((new State())->getTable())
                         ->where('type', $type)
                         ->where('stateful_type', $this->getMorphClass())
                         ->whereColumn('stateful_id', $this->getTable().'.id')
@@ -566,7 +571,7 @@ trait HasStates
                     ->whereColumn('stateful_id', $this->getTable().'.id')
                     ->where('state', '!=', $value)
                     ->whereNotExists(function ($notExistsQuery) use ($type) {
-                        $notExistsQuery->from('states')
+                        $notExistsQuery->from((new State())->getTable())
                             ->where('type', $type)
                             ->where('stateful_type', $this->getMorphClass())
                             ->whereColumn('stateful_id', $this->getTable().'.id')
@@ -599,7 +604,7 @@ trait HasStates
                     ->whereColumn('stateful_id', $this->getTable().'.id')
                     ->whereNotIn('state', $value)
                     ->whereNotExists(function ($notExistsQuery) use ($type) {
-                        $notExistsQuery->from('states')
+                        $notExistsQuery->from((new State())->getTable())
                             ->where('type', $type)
                             ->where('stateful_type', $this->getMorphClass())
                             ->whereColumn('stateful_id', $this->getTable().'.id')
@@ -632,7 +637,7 @@ trait HasStates
                     ->whereColumn('stateful_id', $this->getTable().'.id')
                     ->where('state', '!=', $value)
                     ->whereNotExists(function ($notExistsQuery) use ($type) {
-                        $notExistsQuery->from('states')
+                        $notExistsQuery->from((new State())->getTable())
                             ->where('type', $type)
                             ->where('stateful_type', $this->getMorphClass())
                             ->whereColumn('stateful_id', $this->getTable().'.id')
@@ -654,7 +659,7 @@ trait HasStates
      * @param  string  $select
      * @return void
      */
-    public function scopeAddCurrentStateSelect($query, $type = 'state', $select = 'state', Closure $closure = null)
+    public function scopeAddCurrentStateSelect($query, $type = 'state', $select = 'state', ?Closure $closure = null)
     {
         $query->addSelect(["current_{$type}_{$select}" => State::select($select)
             ->where('type', $type)
